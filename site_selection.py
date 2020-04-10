@@ -66,15 +66,6 @@ sites = sites.rename(columns={'bin_10': 'GridName', 'asset_id': 'fict_site', 'as
                               'path_loss_db': 'path_loss_umi_db', 'morphology': 'Morphology'})
 hr_sites = hr_sites.rename(columns={'bin_10': 'GridName', 'hourly_usage_gb': 'Hour_GBs'})
 
-# THE FOLLOWING SECTION HAS BEEN OF USE IN SOME TESTS
-
-# init_hr_sites = hr_sites
-
-# rb_bins = pd.merge(sites, hr_sites, on='GridName')
-# rb_bins['bin_req_hr_mbps'] = (rb_bins['Hour_GBs'] * 8 * (2 ** 10)) / 3600
-# sum_req = rb_bins.sort_values(by=['GridName', 'bin_req_hr_mbps'], ascending=[True, False])
-# bin_req = sum_req.groupby('GridName')['bin_req_hr_mbps'].max().reset_index()
-
 day_usage = hr_sites.groupby('GridName')['Hour_GBs'].sum().reset_index()
 sites = pd.merge(sites, day_usage, on='GridName')
 
@@ -93,11 +84,6 @@ rx_sensitivity_db = -89.4
 
 # SECTION 2: FUNCTIONS
 
-# !!! split these functions up to reduce complexity morph fin_arrays morph_array
-# for morph, split into one function that takes in asset type, then another function
-# that takes in morphology
-
-# find way to streamline morph_array, fin_array might take some thinking
 
 def asset(asset_in):
     asset_type = 0
@@ -135,43 +121,6 @@ def asset_morph(asset_num, morph_num):
     a_m = asset_num * morph_num
     print(a_m)
     return morph_pairs[a_m]
-
-
-# def morph(in_type, in_morph):
-#     morph_code = 0
-#     if in_type == 'Pole' and in_morph == 'Dense Urban':
-#         morph_code = 1
-#     elif in_type == 'Pole' and in_morph == 'Urban':
-#         morph_code = 2
-#     elif in_type == 'Pole' and in_morph == 'Suburban':
-#         morph_code = 3
-#     elif in_type == 'Pole' and in_morph == 'Rural':
-#         morph_code = 4
-#     elif in_type == 'Off' and in_morph == 'Dense Urban':
-#         morph_code = 5
-#     elif in_type == 'Off' and in_morph == 'Urban':
-#         morph_code = 6
-#     elif in_type == 'Off' and in_morph == 'Suburban':
-#         morph_code = 7
-#     elif in_type == 'Off' and in_morph == 'Rural':
-#         morph_code = 8
-#     elif in_type == 'ROE' and in_morph == 'Dense Urban':
-#         morph_code = 9
-#     elif in_type == 'ROE' and in_morph == 'Urban':
-#         morph_code = 10
-#     elif in_type == 'ROE' and in_morph == 'Suburban':
-#         morph_code = 11
-#     elif in_type == 'ROE' and in_morph == 'Rural':
-#         morph_code = 12
-#     elif in_type == 'SMB' and in_morph == 'Dense Urban':
-#         morph_code = 13
-#     elif in_type == 'SMB' and in_morph == 'Urban':
-#         morph_code = 14
-#     elif in_type == 'SMB' and in_morph == 'Suburban':
-#         morph_code = 15
-#     elif in_type == 'SMB' and in_morph == 'Rural':
-#         morph_code = 16
-#     return morph_code
 
 
 def morph_array_pole(code):
@@ -527,20 +476,6 @@ pole_du = fin_arrays(1)
 pole_u = fin_arrays(2)
 pole_s = fin_arrays(3)
 pole_r = fin_arrays(4)
-# off_du = fin_arrays(5)
-# off_u = fin_arrays(6)
-# off_s = fin_arrays(7)
-# off_r = fin_arrays(8)
-# roe_du = fin_arrays(9)
-# roe_u = fin_arrays(10)
-# roe_s = fin_arrays(11)
-# roe_r = fin_arrays(12)
-# smb_du = fin_arrays(13)
-# smb_u = fin_arrays(14)
-# smb_s = fin_arrays(15)
-# smb_r = fin_arrays(16)
-
-# SECTION 3: FIRST ITERATION TO GENERATE INHERENT NPV
 
 sites['asset_id'] = sites.apply(lambda x: asset(x['Type']), axis=1)
 sites['morph_id'] = sites.apply(lambda x: morph(x['Morphology']), axis=1)
@@ -593,19 +528,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
-
 
 init_sites['rx_signal_strength_db'], init_sites['sinr'], init_sites['rx_signal_strength_mw'] = rx_calc(init_sites['path_loss_umi_db'])
 init_sites.loc[init_sites['sinr'] > 50, 'sinr'] = 50.0
@@ -711,24 +633,12 @@ end_yr1 = timeit.default_timer()
 print(end_yr1 - start_yr1)
 
 print('Year_2', end=' ')
-# print(len(selected['fict_site'].unique()))
+print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr2 = timeit.default_timer()
 sites_yr2 = sites_yr2[['fict_site']]
@@ -828,24 +738,12 @@ end_yr2 = timeit.default_timer()
 print(end_yr2 - start_yr2)
 
 print('Year_3', end=' ')
-# print(len(selected['fict_site'].unique()))
+print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr3 = timeit.default_timer()
 sites_yr3 = sites_yr3[['fict_site']]
@@ -945,24 +843,12 @@ end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
 print('Year_4', end=' ')
-# print(len(selected['fict_site'].unique()))
+print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr4 = timeit.default_timer()
 sites_yr4 = sites_yr4[['fict_site']]
@@ -1067,18 +953,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr5 = timeit.default_timer()
 sites_yr5 = sites_yr5[['fict_site']]
@@ -1180,18 +1054,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr6 = timeit.default_timer()
 sites_yr6 = sites_yr6[['fict_site']]
@@ -1293,18 +1155,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr7 = timeit.default_timer()
 sites_yr7 = sites_yr7[['fict_site']]
@@ -1406,18 +1256,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr8 = timeit.default_timer()
 sites_yr8 = sites_yr8[['fict_site']]
@@ -1519,18 +1357,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 start_yr9 = timeit.default_timer()
 sites_yr9 = sites_yr9[['fict_site']]
@@ -1629,18 +1455,6 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-# off_du = off_du[1:11, :]
-# off_u = off_u[1:11, :]
-# off_s = off_s[1:11, :]
-# off_r = off_r[1:11, :]
-# roe_du = roe_du[1:11, :]
-# roe_u = roe_u[1:11, :]
-# roe_s = roe_s[1:11, :]
-# roe_r = roe_r[1:11, :]
-# smb_du = smb_du[1:11, :]
-# smb_u = smb_u[1:11, :]
-# smb_s = smb_s[1:11, :]
-# smb_r = smb_r[1:11, :]
 
 print('Year_10', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')

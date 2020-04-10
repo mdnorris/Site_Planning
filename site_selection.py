@@ -18,8 +18,8 @@ npv_threshold = 0
 bin_prox = 17
 sinr_deg = 10
 
-# sites = sites.sample(frac=.20, random_state=1)
-# hr_sites = hr_sites.sample(frac=.20, random_state=1)
+# sites = sites.sample(frac=.5, random_state=1)
+# hr_sites = hr_sites.sample(frac=.5, random_state=1)
 
 
 print('12057 seg 2 speed test')
@@ -710,7 +710,7 @@ site_number = len(sites_yr1) + len(sites_yr2) + len(sites_yr3) + len(sites_yr4) 
 print(site_number)
 selected = pd.DataFrame([])
 
-print('YEAR 1')
+print('Year 1', end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -838,8 +838,8 @@ for j in range(len(candidates)):
 end_yr1 = timeit.default_timer()
 print(end_yr1 - start_yr1)
 
-print('Year 2', end='  ')
-start_yr2 = timeit.default_timer()
+print('Year 2', end=' ')
+# print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -858,6 +858,7 @@ smb_u = smb_u[1:11, :]
 smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
+start_yr2 = timeit.default_timer()
 sites_yr2 = sites_yr2[['fict_site']]
 sites_2 = pd.merge(calc_sites, sites_yr2, on='fict_site')
 
@@ -959,7 +960,8 @@ selected = selected.reset_index(drop=True)
 end_yr2 = timeit.default_timer()
 print(end_yr2 - start_yr2)
 
-print('Year 3')
+print('Year 3', end=' ')
+# print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -979,7 +981,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr3 = timeit.default_timer()
-
 sites_yr3 = sites_yr3[['fict_site']]
 sites_3 = pd.merge(calc_sites, sites_yr3, on='fict_site')
 
@@ -1081,7 +1082,8 @@ selected = selected.reset_index(drop=True)
 end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
-print('Year 4')
+print('Year 4', end=' ')
+# print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1101,7 +1103,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr4 = timeit.default_timer()
-
 sites_yr4 = sites_yr4[['fict_site']]
 sites_4 = pd.merge(calc_sites, sites_yr4, on='fict_site')
 
@@ -1202,8 +1203,8 @@ selected = selected.reset_index(drop=True)
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
 
-print('Year 5')
-print(len(selected['fict_site'].unique()))
+print('Year 5', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1223,7 +1224,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr5 = timeit.default_timer()
-
 sites_yr5 = sites_yr5[['fict_site']]
 sites_5 = pd.merge(calc_sites, sites_yr5, on='fict_site')
 
@@ -1321,8 +1321,8 @@ for j in range(len(candidates)):
 end_yr5 = timeit.default_timer()
 print(end_yr5 - start_yr5)
 
-print('Year 6')
-print(len(selected['fict_site'].unique()))
+print('Year 6', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1342,7 +1342,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr6 = timeit.default_timer()
-
 sites_yr6 = sites_yr6[['fict_site']]
 sites_6 = pd.merge(calc_sites, sites_yr6, on='fict_site')
 
@@ -1440,8 +1439,8 @@ for j in range(len(candidates)):
 end_yr6 = timeit.default_timer()
 print(end_yr6 - start_yr6)
 
-print('Year 7')
-print(len(selected['fict_site'].unique()))
+print('Year 7', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1461,7 +1460,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr7 = timeit.default_timer()
-
 sites_yr7 = sites_yr7[['fict_site']]
 sites_7 = pd.merge(calc_sites, sites_yr7, on='fict_site')
 
@@ -1559,8 +1557,8 @@ for j in range(len(candidates)):
 end_yr7 = timeit.default_timer()
 print(end_yr7 - start_yr7)
 
-print('Year 8')
-print(len(selected['fict_site'].unique()))
+print('Year 8', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1580,7 +1578,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr8 = timeit.default_timer()
-
 sites_yr8 = sites_yr8[['fict_site']]
 sites_8 = pd.merge(calc_sites, sites_yr8, on='fict_site')
 
@@ -1678,8 +1675,8 @@ for j in range(len(candidates)):
 end_yr8 = timeit.default_timer()
 print(end_yr8 - start_yr8)
 
-print('YEAR 9')
-print(len(selected['fict_site'].unique()))
+print('Year 9', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1699,7 +1696,6 @@ smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
 start_yr9 = timeit.default_timer()
-
 sites_yr9 = sites_yr9[['fict_site']]
 sites_9 = pd.merge(calc_sites, sites_yr9, on='fict_site')
 
@@ -1814,11 +1810,10 @@ smb_u = smb_u[1:11, :]
 smb_s = smb_s[1:11, :]
 smb_r = smb_r[1:11, :]
 
-print('YEAR 10')
-print(len(selected['fict_site'].unique()))
+print('Year 10', end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 start_yr10 = timeit.default_timer()
-
 sites_yr10 = sites_yr10[['fict_site']]
 sites_10 = pd.merge(calc_sites, sites_yr10, on='fict_site')
 
@@ -2005,7 +2000,8 @@ selected['opt_build_year'] = ((selected['design_build_yr'] + selected['build_yr'
 
 end_time = timeit.default_timer()
 
-print(len(selected['fict_site'].unique()))
+print(len(selected['fict_site'].unique()), end=' ')
+
 print('site count', end=' ')
 print(site_number)
 print('total time seconds', end=' ')
@@ -2024,4 +2020,4 @@ mail.starttls()
 mail.login('notifications.norris@gmail.com', 'Keynes92')
 mail.sendmail('notifications.norris@gmail.com', 'matthew@mdnorris.com', content)
 mail.close()
-print("Sent")
+print("Email Sent")

@@ -1,9 +1,10 @@
-# base file as of 3/9/20, could use cudf, dask, cupy, etc in future
+# base file as of 4/10/20
 
 import timeit
+import smtplib
 import numpy as np
 import pandas as pd
-import smtplib
+
 
 init_time = timeit.default_timer()
 # SECTION 1: DATA INPUTS
@@ -14,15 +15,13 @@ npv_values = pd.read_csv('npv_high_vz_prop.csv', delimiter=',')
 lte_params = pd.read_csv('lte_assumptions.csv', delimiter=',')
 
 npv_threshold = 0
-# 37, 61, 91, 127, 169, 217, 271, 331, 397
 bin_prox = 17
 sinr_deg = 10
 
-# sites = sites.sample(frac=.5, random_state=1)
-# hr_sites = hr_sites.sample(frac=.5, random_state=1)
+# sites = sites.sample(frac=.3, random_state=1)
+# hr_sites = hr_sites.sample(frac=.3, random_state=1)
 
-
-print('12057 seg 2 speed test')
+print('12057_seg_2')
 
 # print(sites['segment'].value_counts())
 # sites = sites[sites.segment == 1]
@@ -34,14 +33,7 @@ sites = sites[sites.segment == 2]
 # sites = sites[sites.segment == 7]
 # sites = sites[sites.segment == 8]
 
-# 6    3559389
-# 1    3462672
-# 4    2716468
-# 3    2705023
-# 8    1295703
-# 5     700095
-# 7     695202
-# 2     355279
+# 12057 - 6 > 1 > 4 > 3 > 8 > 5 > 7 > 2
 
 # print((sites.isna().sum()) / len(sites) * 100)
 sites = sites.dropna()
@@ -55,13 +47,18 @@ sites = sites.drop(['segment', 'sum_GBs_hourly_monthly', 'fips'], axis=1)
 hr_sites['hourly_usage_gb'] = hr_sites['GBs_hourly_monthly'] / 30.42
 hr_sites = hr_sites.drop(['GBs_hourly_monthly'], axis=1)
 
-# sites_roe = sites[sites.asset_type == 'ROE']
-# sites_smb = sites[sites.morphology == 'SMB']
+# print(sites['asset_type'].value_counts())
+
+if 'ROE' in sites.values:
+    sites_roe = sites[sites.asset_type == 'ROE']
+    sites_roe = sites_roe.rename(columns={'bin_10': 'GridName', 'asset_id': 'fict_site', 'path_loss_db': 'path_loss_umi_db'})
+
+if 'SMB' in sites.values:
+    sites_smb = sites[sites.asset_type == 'SMB']
+
 sites = sites[sites.asset_type == 'Pole']
 
-initial_sites = pd.Series(len(sites['asset_id'].unique()))
-# print('initial sites', end='  ')
-# print(len(sites['asset_id'].unique()))
+initial_poles = pd.Series(len(sites['asset_id'].unique()))
 
 # sites = sites.drop(['segment', 'sum_GBs_hourly_monthly', 'fips'], axis=1)
 
@@ -69,8 +66,7 @@ sites = sites.rename(columns={'bin_10': 'GridName', 'asset_id': 'fict_site', 'as
                               'path_loss_db': 'path_loss_umi_db', 'morphology': 'Morphology'})
 hr_sites = hr_sites.rename(columns={'bin_10': 'GridName', 'hourly_usage_gb': 'Hour_GBs'})
 
-# comment out with WTG test case
-# sites_roe = sites_roe.rename(columns={'bin_10': 'GridName', 'asset_id': 'fict_site', 'path_loss_db': 'path_loss_umi_db'})
+# THE FOLLOWING SECTION HAS BEEN OF USE IN SOME TESTS
 
 # init_hr_sites = hr_sites
 
@@ -88,19 +84,6 @@ npv_values.columns = ['non', 'pole_du', 'pole_u', 'pole_s', 'pole_r', 'off_du', 
                       'off_s', 'off_r', 'roe_du', 'roe_u', 'roe_s', 'roe_r',
                       'smb_du', 'smb_u', 'smb_s', 'smb_r']
 
-# This creates time periods for xnpv function (for more information
-st_date20 = pd.date_range(start='2020-06-30', periods=11, freq='12M')
-st_date21 = pd.date_range(start='2021-06-30', periods=10, freq='12M')
-st_date22 = pd.date_range(start='2022-06-30', periods=9, freq='12M')
-st_date23 = pd.date_range(start='2023-06-30', periods=8, freq='12M')
-st_date24 = pd.date_range(start='2024-06-30', periods=7, freq='12M')
-st_date25 = pd.date_range(start='2025-06-30', periods=6, freq='12M')
-st_date26 = pd.date_range(start='2026-06-30', periods=5, freq='12M')
-st_date27 = pd.date_range(start='2027-06-30', periods=4, freq='12M')
-st_date28 = pd.date_range(start='2028-06-30', periods=3, freq='12M')
-st_date29 = pd.date_range(start='2029-06-30', periods=2, freq='12M')
-st_date30 = pd.date_range(start='2030-06-30', periods=1, freq='12M')
-
 disc_rt = .15
 
 # LTE INPUTS
@@ -110,43 +93,107 @@ rx_sensitivity_db = -89.4
 
 # SECTION 2: FUNCTIONS
 
-def morph(in_type, in_morph):
-    morph_code = 0
-    if in_type == 'Pole' and in_morph == 'Dense Urban':
-        morph_code = 1
-    elif in_type == 'Pole' and in_morph == 'Urban':
-        morph_code = 2
-    elif in_type == 'Pole' and in_morph == 'Suburban':
-        morph_code = 3
-    elif in_type == 'Pole' and in_morph == 'Rural':
-        morph_code = 4
-    elif in_type == 'Off' and in_morph == 'Dense Urban':
-        morph_code = 5
-    elif in_type == 'Off' and in_morph == 'Urban':
-        morph_code = 6
-    elif in_type == 'Off' and in_morph == 'Suburban':
-        morph_code = 7
-    elif in_type == 'Off' and in_morph == 'Rural':
-        morph_code = 8
-    elif in_type == 'ROE' and in_morph == 'Dense Urban':
-        morph_code = 9
-    elif in_type == 'ROE' and in_morph == 'Urban':
-        morph_code = 10
-    elif in_type == 'ROE' and in_morph == 'Suburban':
-        morph_code = 11
-    elif in_type == 'ROE' and in_morph == 'Rural':
-        morph_code = 12
-    elif in_type == 'SMB' and in_morph == 'Dense Urban':
-        morph_code = 13
-    elif in_type == 'SMB' and in_morph == 'Urban':
-        morph_code = 14
-    elif in_type == 'SMB' and in_morph == 'Suburban':
-        morph_code = 15
-    elif in_type == 'SMB' and in_morph == 'Rural':
-        morph_code = 16
-    # else:
-    #     print('error')
-    return morph_code
+# !!! split these functions up to reduce complexity morph fin_arrays morph_array
+# for morph, split into one function that takes in asset type, then another function
+# that takes in morphology
+
+# find way to streamline morph_array, fin_array might take some thinking
+
+def asset(asset_in):
+    asset_type = 0
+    if asset_in == 'Pole':
+        asset_type = 1
+    elif asset_in == 'SMB':
+        asset_type = 3
+    elif asset_in == 'ROE':
+        asset_type = 5
+    elif asset_in == 'Off':
+        asset_type = 7
+    return asset_type
+
+
+def morph(morph_in):
+    morph_type = 0
+    if morph_in == 'Dense Urban':
+        morph_type = 11
+    elif morph_in == 'Urban':
+        morph_type = 13
+    elif morph_in == 'Suburban':
+        morph_type = 17
+    elif morph_in == 'Rural':
+        morph_type = 19
+    return morph_type
+
+
+morph_pairs = {11: 1, 13: 2, 17: 3, 19: 4,
+               55: 9, 65: 10, 85: 11, 95: 12,
+               33: 13, 39: 14, 51: 15, 57: 16,
+               77: 5, 91: 6, 119: 7, 133: 8}
+
+
+def asset_morph(asset_num, morph_num):
+    a_m = asset_num * morph_num
+    print(a_m)
+    return morph_pairs[a_m]
+
+
+# def morph(in_type, in_morph):
+#     morph_code = 0
+#     if in_type == 'Pole' and in_morph == 'Dense Urban':
+#         morph_code = 1
+#     elif in_type == 'Pole' and in_morph == 'Urban':
+#         morph_code = 2
+#     elif in_type == 'Pole' and in_morph == 'Suburban':
+#         morph_code = 3
+#     elif in_type == 'Pole' and in_morph == 'Rural':
+#         morph_code = 4
+#     elif in_type == 'Off' and in_morph == 'Dense Urban':
+#         morph_code = 5
+#     elif in_type == 'Off' and in_morph == 'Urban':
+#         morph_code = 6
+#     elif in_type == 'Off' and in_morph == 'Suburban':
+#         morph_code = 7
+#     elif in_type == 'Off' and in_morph == 'Rural':
+#         morph_code = 8
+#     elif in_type == 'ROE' and in_morph == 'Dense Urban':
+#         morph_code = 9
+#     elif in_type == 'ROE' and in_morph == 'Urban':
+#         morph_code = 10
+#     elif in_type == 'ROE' and in_morph == 'Suburban':
+#         morph_code = 11
+#     elif in_type == 'ROE' and in_morph == 'Rural':
+#         morph_code = 12
+#     elif in_type == 'SMB' and in_morph == 'Dense Urban':
+#         morph_code = 13
+#     elif in_type == 'SMB' and in_morph == 'Urban':
+#         morph_code = 14
+#     elif in_type == 'SMB' and in_morph == 'Suburban':
+#         morph_code = 15
+#     elif in_type == 'SMB' and in_morph == 'Rural':
+#         morph_code = 16
+#     return morph_code
+
+
+def morph_array_pole(code):
+    if code == 1:
+        return pole_du
+    elif code == 2:
+        return pole_u
+    elif code == 3:
+        return pole_s
+    elif code == 4:
+        return pole_r
+
+
+def morph_array_roe(code):
+    if code == 9:
+        return roe_du
+    elif code == 10:
+        return roe_u
+    elif code == 11:
+        return roe_s
+    elif code == 12:
+        return roe_r
 
 
 def fin_arrays(code):
@@ -163,32 +210,30 @@ def fin_arrays(code):
         npv_array = npv_values.loc[:, 'pole_s']
     elif code == 4:
         npv_array = npv_values.loc[:, 'pole_r']
-    elif code == 5:
-        npv_array = npv_values.loc[:, 'off_du']
-    elif code == 6:
-        npv_array = npv_values.loc[:, 'off_u']
-    elif code == 7:
-        npv_array = npv_values.loc[:, 'off_s']
-    elif code == 8:
-        npv_array = npv_values.loc[:, 'off_r']
-    elif code == 9:
-        npv_array = npv_values.loc[:, 'roe_du']
-    elif code == 10:
-        npv_array = npv_values.loc[:, 'roe_u']
-    elif code == 11:
-        npv_array = npv_values.loc[:, 'roe_s']
-    elif code == 12:
-        npv_array = npv_values.loc[:, 'roe_r']
-    elif code == 13:
-        npv_array = npv_values.loc[:, 'smb_du']
-    elif code == 14:
-        npv_array = npv_values.loc[:, 'smb_u']
-    elif code == 15:
-        npv_array = npv_values.loc[:, 'smb_s']
-    elif code == 16:
-        npv_array = npv_values.loc[:, 'smb_r']
-    # else:
-    #     print('error')
+    # elif code == 5:
+    #     npv_array = npv_values.loc[:, 'off_du']
+    # elif code == 6:
+    #     npv_array = npv_values.loc[:, 'off_u']
+    # elif code == 7:
+    #     npv_array = npv_values.loc[:, 'off_s']
+    # elif code == 8:
+    #     npv_array = npv_values.loc[:, 'off_r']
+    # elif code == 9:
+    #     npv_array = npv_values.loc[:, 'roe_du']
+    # elif code == 10:
+    #     npv_array = npv_values.loc[:, 'roe_u']
+    # elif code == 11:
+    #     npv_array = npv_values.loc[:, 'roe_s']
+    # elif code == 12:
+    #     npv_array = npv_values.loc[:, 'roe_r']
+    # elif code == 13:
+    #     npv_array = npv_values.loc[:, 'smb_du']
+    # elif code == 14:
+    #     npv_array = npv_values.loc[:, 'smb_u']
+    # elif code == 15:
+    #     npv_array = npv_values.loc[:, 'smb_s']
+    # elif code == 16:
+    #     npv_array = npv_values.loc[:, 'smb_r']
     for m in range(11):
         cpx[m] = float(npv_array[m + 1])
     for m in range(11):
@@ -201,43 +246,6 @@ def fin_arrays(code):
     return end_array
 
 
-def morph_array(code):
-    if code == 1:
-        return pole_du
-    elif code == 2:
-        return pole_u
-    elif code == 3:
-        return pole_s
-    elif code == 4:
-        return pole_r
-    elif code == 5:
-        return off_du
-    elif code == 6:
-        return off_u
-    elif code == 7:
-        return off_s
-    elif code == 8:
-        return off_r
-    elif code == 9:
-        return roe_du
-    elif code == 10:
-        return roe_u
-    elif code == 11:
-        return roe_s
-    elif code == 12:
-        return roe_r
-    elif code == 13:
-        return smb_du
-    elif code == 14:
-        return smb_u
-    elif code == 15:
-        return smb_s
-    elif code == 16:
-        return smb_r
-    # else:
-    #     print('error')
-
-
 # these variables are used in case adjustments to xnpv functinos are made
 day_diff = 0.0
 cell_split = 2.0
@@ -247,7 +255,7 @@ cell_split = 2.0
 
 
 def bld_npv21(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[1:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 1)
     if value > 0:
@@ -259,7 +267,7 @@ def bld_npv21(gbs, code):
 
 
 def bld_npv22(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[2:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 2)
     if value > 0:
@@ -271,7 +279,7 @@ def bld_npv22(gbs, code):
 
 
 def bld_npv23(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[3:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 3)
     if value > 0:
@@ -283,7 +291,7 @@ def bld_npv23(gbs, code):
 
 
 def bld_npv24(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[4:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 4)
     if value > 0:
@@ -295,7 +303,7 @@ def bld_npv24(gbs, code):
 
 
 def bld_npv25(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[5:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 5)
     if value > 0:
@@ -307,7 +315,7 @@ def bld_npv25(gbs, code):
 
 
 def bld_npv26(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[6:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 6)
     if value > 0:
@@ -319,7 +327,7 @@ def bld_npv26(gbs, code):
 
 
 def bld_npv27(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[7:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 7)
     if value > 0:
@@ -331,7 +339,7 @@ def bld_npv27(gbs, code):
 
 
 def bld_npv28(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[8:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 8)
     if value > 0:
@@ -343,7 +351,7 @@ def bld_npv28(gbs, code):
 
 
 def bld_npv29(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[9:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 9)
     if value > 0:
@@ -355,7 +363,7 @@ def bld_npv29(gbs, code):
 
 
 def bld_npv30(gbs, code):
-    array = morph_array(code)
+    array = morph_array_pole(code)
     array = array[10:11, :]
     value = (gbs * 365 * array[0][3] * array[0][2] - array[0][1] - array[0][0]) / (1.15 ** 10)
     if value > 0:
@@ -370,140 +378,10 @@ def bld_npv30(gbs, code):
 # used numpy array to make year
 
 
-def npv21(gbs, code):
-    value = np.empty([10, 1])
-    array = morph_array(code)
-    array = array[1:11, :]
-    for m in range(10):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv22(gbs, code):
-    value = np.empty([9, 1])
-    array = morph_array(code)
-    array = array[2:11, :]
-    for m in range(9):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv23(gbs, code):
-    value = np.empty([8, 1])
-    array = morph_array(code)
-    array = array[3:11, :]
-    for m in range(8):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([3, 4, 5, 6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv24(gbs, code):
-    value = np.empty([7, 1])
-    array = morph_array(code)
-    array = array[4:11, :]
-    for m in range(7):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([4, 5, 6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv25(gbs, code):
-    value = np.empty([6, 1])
-    array = morph_array(code)
-    array = array[5:11, :]
-    for m in range(6):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([5, 6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv26(gbs, code):
-    value = np.empty([5, 1])
-    array = morph_array(code)
-    array = array[6:11, :]
-    for m in range(5):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([6, 7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv27(gbs, code):
-    value = np.empty([4, 1])
-    array = morph_array(code)
-    array = array[7:11, :]
-    for m in range(4):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([7, 8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv28(gbs, code):
-    value = np.empty([3, 1])
-    array = morph_array(code)
-    array = array[8:11, :]
-    for m in range(3):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([8, 9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv29(gbs, code):
-    value = np.empty([2, 1])
-    array = morph_array(code)
-    array = array[9:11, :]
-    for m in range(2):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([9, 10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
-def npv30(gbs, code):
-    value = np.empty([1, 1])
-    array = morph_array(code)
-    array = array[10:11, :]
-    for m in range(1):
-        value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
-    year = np.array([10])
-    year_0 = 0
-    value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
-
-
 def loop_npv21(gbs, code):
     value = np.empty([10, 1])
     year = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(10):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -515,7 +393,7 @@ def loop_npv21(gbs, code):
 def loop_npv22(gbs, code):
     value = np.empty([9, 1])
     year = np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(9):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -527,7 +405,7 @@ def loop_npv22(gbs, code):
 def loop_npv23(gbs, code):
     value = np.empty([8, 1])
     year = np.array([3, 4, 5, 6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(8):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -539,7 +417,7 @@ def loop_npv23(gbs, code):
 def loop_npv24(gbs, code):
     value = np.empty([7, 1])
     year = np.array([4, 5, 6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(7):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -551,7 +429,7 @@ def loop_npv24(gbs, code):
 def loop_npv25(gbs, code):
     value = np.empty([6, 1])
     year = np.array([5, 6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(6):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -564,7 +442,7 @@ def loop_npv25(gbs, code):
 def loop_npv26(gbs, code):
     value = np.empty([5, 1])
     year = np.array([6, 7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(5):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -577,7 +455,7 @@ def loop_npv26(gbs, code):
 def loop_npv27(gbs, code):
     value = np.empty([4, 1])
     year = np.array([7, 8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(4):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -589,7 +467,7 @@ def loop_npv27(gbs, code):
 def loop_npv28(gbs, code):
     value = np.empty([3, 1])
     year = np.array([8, 9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(3):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -601,7 +479,7 @@ def loop_npv28(gbs, code):
 def loop_npv29(gbs, code):
     value = np.empty([2, 1])
     year = np.array([9, 10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(2):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -613,7 +491,7 @@ def loop_npv29(gbs, code):
 def loop_npv30(gbs, code):
     value = np.empty([1, 1])
     year = np.array([10])
-    array = morph_array(code)
+    array = morph_array_pole(code)
     for m in range(1):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
@@ -649,23 +527,25 @@ pole_du = fin_arrays(1)
 pole_u = fin_arrays(2)
 pole_s = fin_arrays(3)
 pole_r = fin_arrays(4)
-off_du = fin_arrays(5)
-off_u = fin_arrays(6)
-off_s = fin_arrays(7)
-off_r = fin_arrays(8)
-roe_du = fin_arrays(9)
-roe_u = fin_arrays(10)
-roe_s = fin_arrays(11)
-roe_r = fin_arrays(12)
-smb_du = fin_arrays(13)
-smb_u = fin_arrays(14)
-smb_s = fin_arrays(15)
-smb_r = fin_arrays(16)
+# off_du = fin_arrays(5)
+# off_u = fin_arrays(6)
+# off_s = fin_arrays(7)
+# off_r = fin_arrays(8)
+# roe_du = fin_arrays(9)
+# roe_u = fin_arrays(10)
+# roe_s = fin_arrays(11)
+# roe_r = fin_arrays(12)
+# smb_du = fin_arrays(13)
+# smb_u = fin_arrays(14)
+# smb_s = fin_arrays(15)
+# smb_r = fin_arrays(16)
 
 # SECTION 3: FIRST ITERATION TO GENERATE INHERENT NPV
 
-sites['morph_code'] = sites.apply(lambda x: morph(x['Type'], x['Morphology']), axis=1)
-sites = sites.drop(['Type', 'Morphology'], axis=1)
+sites['asset_id'] = sites.apply(lambda x: asset(x['Type']), axis=1)
+sites['morph_id'] = sites.apply(lambda x: morph(x['Morphology']), axis=1)
+sites['morph_code'] = sites.apply(lambda x: asset_morph(x['asset_id'], x['morph_id']), axis=1)
+sites = sites.drop(['Type', 'Morphology', 'asset_id', 'morph_id'], axis=1)
 site_t_m = sites.groupby('fict_site')['morph_code'].mean().reset_index()
 init_sites = sites
 
@@ -688,11 +568,7 @@ inh_bld_yr = bld_yr_sites[['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
 bld_yr_sites['build_yr'] = inh_bld_yr.idxmin(axis=1).astype(int)
 bld_yr_sites = bld_yr_sites[bld_yr_sites['10'] != 12]
-print(bld_yr_sites['build_yr'].value_counts())
 init_build_yr_sites = bld_yr_sites[['fict_site', 'build_yr']]
-
-# min_bld_yr_sites = pd.merge(init_sites, init_build_yr_sites, on='fict_site')
-# min_bld_yr_sites.to_csv('wtg_min_bld_yr.csv')
 
 sites_yr1 = bld_yr_sites.loc[bld_yr_sites['build_yr'] == 1]
 sites_yr2 = bld_yr_sites.loc[bld_yr_sites['build_yr'] == 2]
@@ -708,26 +584,27 @@ sites_yr10 = bld_yr_sites.loc[bld_yr_sites['build_yr'] == 10]
 site_number = len(sites_yr1) + len(sites_yr2) + len(sites_yr3) + len(sites_yr4) + len(sites_yr5) + len(sites_yr6) + \
               len(sites_yr7) + len(sites_yr8) + len(sites_yr9) + len(sites_yr10)
 print(site_number)
+
 selected = pd.DataFrame([])
 
-print('Year 1', end=' ')
+print('Year_1', end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 
 init_sites['rx_signal_strength_db'], init_sites['sinr'], init_sites['rx_signal_strength_mw'] = rx_calc(init_sites['path_loss_umi_db'])
@@ -771,7 +648,6 @@ if len(sites_yr1) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -823,8 +699,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -832,31 +706,29 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr1 = timeit.default_timer()
 print(end_yr1 - start_yr1)
 
-print('Year 2', end=' ')
+print('Year_2', end=' ')
 # print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr2 = timeit.default_timer()
 sites_yr2 = sites_yr2[['fict_site']]
@@ -889,7 +761,6 @@ if len(sites_yr2) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -941,8 +812,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -950,8 +819,6 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif len(candidates) == 0:
         break
 
@@ -960,25 +827,25 @@ selected = selected.reset_index(drop=True)
 end_yr2 = timeit.default_timer()
 print(end_yr2 - start_yr2)
 
-print('Year 3', end=' ')
+print('Year_3', end=' ')
 # print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr3 = timeit.default_timer()
 sites_yr3 = sites_yr3[['fict_site']]
@@ -1011,7 +878,6 @@ if len(sites_yr3) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1063,8 +929,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1072,8 +936,6 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif len(candidates) == 0:
         break
 
@@ -1082,25 +944,25 @@ selected = selected.reset_index(drop=True)
 end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
-print('Year 4', end=' ')
+print('Year_4', end=' ')
 # print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr4 = timeit.default_timer()
 sites_yr4 = sites_yr4[['fict_site']]
@@ -1133,7 +995,6 @@ if len(sites_yr4) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1185,8 +1046,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1194,8 +1053,6 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 selected = selected.reset_index(drop=True)
 
@@ -1203,25 +1060,25 @@ selected = selected.reset_index(drop=True)
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
 
-print('Year 5', end=' ')
+print('Year_5', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr5 = timeit.default_timer()
 sites_yr5 = sites_yr5[['fict_site']]
@@ -1254,7 +1111,6 @@ if len(sites_yr5) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1306,8 +1162,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1315,31 +1169,29 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr5 = timeit.default_timer()
 print(end_yr5 - start_yr5)
 
-print('Year 6', end=' ')
+print('Year_6', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr6 = timeit.default_timer()
 sites_yr6 = sites_yr6[['fict_site']]
@@ -1372,7 +1224,6 @@ if len(sites_yr6) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1424,8 +1275,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1433,31 +1282,29 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr6 = timeit.default_timer()
 print(end_yr6 - start_yr6)
 
-print('Year 7', end=' ')
+print('Year_7', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr7 = timeit.default_timer()
 sites_yr7 = sites_yr7[['fict_site']]
@@ -1490,7 +1337,6 @@ if len(sites_yr7) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1542,8 +1388,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1551,31 +1395,29 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr7 = timeit.default_timer()
 print(end_yr7 - start_yr7)
 
-print('Year 8', end=' ')
+print('Year_8', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr8 = timeit.default_timer()
 sites_yr8 = sites_yr8[['fict_site']]
@@ -1608,7 +1450,6 @@ if len(sites_yr8) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1660,8 +1501,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1669,31 +1508,29 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr8 = timeit.default_timer()
 print(end_yr8 - start_yr8)
 
-print('Year 9', end=' ')
+print('Year_9', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
 start_yr9 = timeit.default_timer()
 sites_yr9 = sites_yr9[['fict_site']]
@@ -1726,7 +1563,6 @@ if len(sites_yr9) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1778,8 +1614,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1787,8 +1621,6 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr9 = timeit.default_timer()
 print(end_yr9 - start_yr9)
@@ -1797,20 +1629,20 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-off_du = off_du[1:11, :]
-off_u = off_u[1:11, :]
-off_s = off_s[1:11, :]
-off_r = off_r[1:11, :]
-roe_du = roe_du[1:11, :]
-roe_u = roe_u[1:11, :]
-roe_s = roe_s[1:11, :]
-roe_r = roe_r[1:11, :]
-smb_du = smb_du[1:11, :]
-smb_u = smb_u[1:11, :]
-smb_s = smb_s[1:11, :]
-smb_r = smb_r[1:11, :]
+# off_du = off_du[1:11, :]
+# off_u = off_u[1:11, :]
+# off_s = off_s[1:11, :]
+# off_r = off_r[1:11, :]
+# roe_du = roe_du[1:11, :]
+# roe_u = roe_u[1:11, :]
+# roe_s = roe_s[1:11, :]
+# roe_r = roe_r[1:11, :]
+# smb_du = smb_du[1:11, :]
+# smb_u = smb_u[1:11, :]
+# smb_s = smb_s[1:11, :]
+# smb_r = smb_r[1:11, :]
 
-print('Year 10', end=' ')
+print('Year_10', end=' ')
 print(len(selected['fict_site'].unique()), end=' ')
 
 start_yr10 = timeit.default_timer()
@@ -1844,7 +1676,6 @@ if len(sites_yr10) > 0:
         candidates = pd.DataFrame([])
 
 for j in range(len(candidates)):
-    # start_outer = timeit.default_timer()
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
@@ -1896,8 +1727,7 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[['fict_site']]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
+
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -1905,8 +1735,6 @@ for j in range(len(candidates)):
         candidates = np.delete(candidates, np.where(candidates == bad_candidate)[0], axis=0)
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: 'fict_site'})
-        # print(len(candidates), end='  ')
-        # print(timeit.default_timer() - start_outer)
 
 end_yr10 = timeit.default_timer()
 print(end_yr10 - start_yr10)
@@ -1932,7 +1760,6 @@ selected = pd.merge(selected, init_build_yr_sites, on='fict_site')
 selected = pd.merge(selected, init_sites, on='fict_site')
 
 bld_yr_sites['build_yr'] = inh_bld_yr.idxmin(axis=1).astype(int)
-print(bld_yr_sites['build_yr'].value_counts())
 init_build_yr_sites = bld_yr_sites[['fict_site', 'build_yr']]
 
 site_bin_gbs = selected.groupby('fict_site')['Hour_GBs'].sum().reset_index()
@@ -2000,17 +1827,21 @@ selected['opt_build_year'] = ((selected['design_build_yr'] + selected['build_yr'
 
 end_time = timeit.default_timer()
 
-print(len(selected['fict_site'].unique()), end=' ')
+print('selected_sites:', end=' ')
+print(len(selected['fict_site'].unique()))
 
-print('site count', end=' ')
+print('site_count', end=' ')
 print(site_number)
-print('total time seconds', end=' ')
+
+print('total_seconds', end=' ')
 total_time = round((end_time - init_time), 2)
 print(total_time)
-print('total time minutes', end=' ')
+
+print('total_minutes', end=' ')
 print(total_time / 60)
-print('time per site', end=' ')
-print(total_time / initial_sites.values)
+
+print('time_per_site', end=' ')
+print(total_time / initial_poles.values)
 selected.to_csv('12057_test.csv')
 
 content = '12057_seg complete'

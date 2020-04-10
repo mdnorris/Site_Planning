@@ -455,8 +455,8 @@ def loop_npv21(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv22(gbs, code):
@@ -467,8 +467,8 @@ def loop_npv22(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv23(gbs, code):
@@ -479,8 +479,8 @@ def loop_npv23(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv24(gbs, code):
@@ -491,8 +491,8 @@ def loop_npv24(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv25(gbs, code):
@@ -503,8 +503,8 @@ def loop_npv25(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    npv_loop = int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                        for value_i, year_i in zip(value, year)]))
+    npv_loop = int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                        for value_i, year_i in zip(value, year)))
     return npv_loop
 
 
@@ -516,8 +516,8 @@ def loop_npv26(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    npv_loop = int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                        for value_i, year_i in zip(value, year)]))
+    npv_loop = int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                        for value_i, year_i in zip(value, year)))
     return npv_loop
 
 
@@ -529,8 +529,8 @@ def loop_npv27(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv28(gbs, code):
@@ -541,8 +541,8 @@ def loop_npv28(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv29(gbs, code):
@@ -553,8 +553,8 @@ def loop_npv29(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def loop_npv30(gbs, code):
@@ -565,8 +565,8 @@ def loop_npv30(gbs, code):
         value[m] = gbs * 365 * array[m][3] * array[m][2] - array[m][1]
     year_0 = 0
     value[0] = value[0] - array[0][0]
-    return int(sum([value_i / ((1.0 + disc_rt) ** (year_i - year_0))
-                    for value_i, year_i in zip(value, year)]))
+    return int(sum(value_i / ((1.0 + disc_rt) ** (year_i - year_0))
+                    for value_i, year_i in zip(value, year)))
 
 
 def rb_thru_put(code_rate, symbols, mimo, subframe, retrans, high_layer_over, over_tp_kbps):

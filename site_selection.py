@@ -5,7 +5,6 @@ import smtplib
 import numpy as np
 import pandas as pd
 
-
 init_time = timeit.default_timer()
 # SECTION 1: DATA INPUTS
 
@@ -14,12 +13,12 @@ hr_sites = pd.read_csv('usage_12057.csv', delimiter=',')
 npv_values = pd.read_csv('npv_high_vz_prop.csv', delimiter=',')
 lte_params = pd.read_csv('lte_assumptions.csv', delimiter=',')
 
-npv_threshold = 500
+npv_threshold = 0
 bin_prox = 17
 sinr_deg = 10
 
-sites = sites.sample(frac=.5, random_state=1)
-hr_sites = hr_sites.sample(frac=.5, random_state=1)
+# sites = sites.sample(frac=.5, random_state=1)
+# hr_sites = hr_sites.sample(frac=.5, random_state=1)
 
 print('12057_seg_2')
 
@@ -197,6 +196,7 @@ def fin_arrays_roe(code):
 # these variables are used in case adjustments to xnpv functinos are made
 day_diff = 0.0
 cell_split = 2.0
+
 
 # bld_npv functions are for build year, return 12 if negative
 # so != 12 can be used to subset rows
@@ -570,7 +570,8 @@ def loop_npv30(gbs, code):
 
 
 def rb_thru_put(code_rate, symbols, mimo, subframe, retrans, high_layer_over, over_tp_kbps):
-    rb_thru = (((code_rate * symbols * 4800000 * mimo * subframe) / 1000000) * ((1 - retrans) * (1 - high_layer_over)) - (over_tp_kbps / 1000)) / 400
+    rb_thru = (((code_rate * symbols * 4800000 * mimo * subframe) / 1000000) * (
+                (1 - retrans) * (1 - high_layer_over)) - (over_tp_kbps / 1000)) / 400
     return rb_thru
 
 
@@ -648,7 +649,8 @@ pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
 
-init_sites['rx_signal_strength_db'], init_sites['sinr'], init_sites['rx_signal_strength_mw'] = rx_calc(init_sites['path_loss_umi_db'])
+init_sites['rx_signal_strength_db'], init_sites['sinr'], init_sites['rx_signal_strength_mw'] = rx_calc(
+    init_sites['path_loss_umi_db'])
 init_sites.loc[init_sites['sinr'] > 50, 'sinr'] = 50.0
 calc_sites = init_sites[['fict_site', 'GridName', 'Hour_GBs', 'sinr', 'rx_signal_strength_db',
                          'rx_signal_strength_mw', 'morph_code']]
@@ -1060,7 +1062,6 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: 'fict_site'})
 
 selected = selected.reset_index(drop=True)
-
 
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
@@ -1754,13 +1755,40 @@ if 'ROE' in first_sites.values:
     sites_roe = pd.merge(sites_roe, day_usage, on='GridName')
     sites_roe['design_build_yr'] = sites_roe['build_yr']
     sites_roe['opt_build_year'] = sites_roe['build_yr']
+    sites_roe['rx_signal_strength_db'], sites_roe['sinr'], sites_roe['rx_signal_strength_mw'] = rx_calc(
+        sites_roe['path_loss_umi_db'])
+    sites_roe.loc[sites_roe['sinr'] > 50, 'sinr'] = 50.0
+
     selected = sans_roe.append(sites_roe, sort=True)
-    print((selected.isna().sum() / len(selected)) * 100)
+
+selected = selected.drop(['build_yr', 'design_build_yr'], axis=1)
+selected_bins = selected['GridName'].value_counts().reset_index()
+selected_bins = selected_bins.rename(columns={'index': 'GridName', 'GridName': 'bin_count'})
+selected = pd.merge(selected, selected_bins, on='GridName')
+
+selected_unique = selected[selected['bin_count'] == 1].copy()
+selected_dups = selected[selected['bin_count'] > 1].copy()
+temp_selected_dups = selected_dups.groupby('GridName')['rx_signal_strength_mw'].sum().reset_index()
+selected_dups = selected_dups.drop(['rx_signal_strength_mw'], axis=1)
+selected_dups = pd.merge(selected_dups, temp_selected_dups, on='GridName')
+selected_unique['sinr_new'] = selected_unique['sinr']
+selected_dups['sinr_new'] = sinr_new(selected_dups['rx_signal_strength_mw'],
+                                     selected_dups['rx_signal_strength_db'])
+selected = selected_unique.append(selected_dups, sort=True)
+
+print('NaNs', end=' ')
+print((selected.isna().sum() / len(selected)) * 100)
+
+selected = selected[selected.sinr_new >= -7.0]
 
 end_time = timeit.default_timer()
 
+print('average sinr_new', end=' ')
+print(selected['sinr_new'].mean())
+
 print('asset_type_counts:')
-print(selected['morph_code'].value_counts())
+temp_selected = selected.groupby('fict_site')['morph_code'].first().reset_index()
+print(temp_selected['morph_code'].value_counts())
 
 print('selected_sites:', end=' ')
 print(len(selected['fict_site'].unique()))

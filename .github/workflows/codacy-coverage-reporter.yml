@@ -12,3 +12,5 @@ jobs:
         uses: mrfyda/codacy-coverage-reporter-action@master
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          
+          .github/workflows/codacy-coverage-reporter.yml:  

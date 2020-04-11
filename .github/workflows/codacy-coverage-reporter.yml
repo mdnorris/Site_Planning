@@ -11,4 +11,4 @@ jobs:
       - name: Run codacy-coverage-reporter
         uses: mrfyda/codacy-coverage-reporter-action@master
         with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          project-token: ${{ secrets.7dfb9a5889a8410c8eba734a7334f5b1 }}

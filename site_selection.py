@@ -14,23 +14,23 @@ hr_sites = pd.read_csv("usage_12057.csv", delimiter=",")
 npv_values = pd.read_csv("npv_high_vz_prop.csv", delimiter=",")
 lte_params = pd.read_csv("lte_assumptions.csv", delimiter=",")
 
-npv_threshold = 0
+npv_threshold = 500
 bin_prox = 17
 sinr_deg = 10
 
 # sites = sites.sample(frac=.5, random_state=1)
 # hr_sites = hr_sites.sample(frac=.5, random_state=1)
 
-print("12057_seg_2")
+print("12057_seg_7")
 
 # print(sites['segment'].value_counts())
 # sites = sites[sites.segment == 1]
-sites = sites[sites.segment == 2]
+# sites = sites[sites.segment == 2]
 # sites = sites[sites.segment == 3]
 # sites = sites[sites.segment == 4]
 # sites = sites[sites.segment == 5]
 # sites = sites[sites.segment == 6]
-# sites = sites[sites.segment == 7]
+sites = sites[sites.segment == 7]
 # sites = sites[sites.segment == 8]
 
 # 12057 - 6 > 1 > 4 > 3 > 8 > 5 > 7 > 2
@@ -798,6 +798,7 @@ inh_bld_yr = bld_yr_sites[["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]]
 
 bld_yr_sites["build_yr"] = inh_bld_yr.idxmin(axis=1).astype(int)
 bld_yr_sites = bld_yr_sites[bld_yr_sites["10"] != 12]
+print(bld_yr_sites['build_yr'].value_counts())
 init_build_yr_sites = bld_yr_sites[["fict_site", "build_yr"]]
 
 sites_yr1 = bld_yr_sites.loc[bld_yr_sites["build_yr"] == 1]
@@ -1211,7 +1212,7 @@ end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
 print("Year_4", end=" ")
-# print(len(selected['fict_site'].unique()), end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -2202,38 +2203,38 @@ selected_dups["sinr_new"] = sinr_new(
 )
 selected = selected_unique.append(selected_dups, sort=True)
 
-print("NaNs", end=" ")
-print((selected.isna().sum() / len(selected)) * 100)
+# print("NaNs", end=" ")
+# print((selected.isna().sum() / len(selected)) * 100)
 
 selected = selected[selected.sinr_new >= -7.0]
 
 end_time = timeit.default_timer()
 
-print("average sinr_new", end=" ")
-print(selected["sinr_new"].mean())
-
-print("asset_type_counts:")
 temp_selected = selected.groupby("fict_site")["morph_code"].first().reset_index()
 print(temp_selected["morph_code"].value_counts())
 
-print("selected_sites:", end=" ")
+print("final_sites:", end=" ")
 print(len(selected["fict_site"].unique()))
 
 print("site_count:", end=" ")
 print(site_number)
 
-print("total_seconds:", end=" ")
+print("total_sec:", end=" ")
 total_time = round((end_time - init_time), 2)
 print(total_time)
 
-print("total_minutes:", end=" ")
+print("total_min:", end=" ")
 print(total_time / 60)
 
-print("time_per_site:", end=" ")
-print((total_time / initial_poles))
-selected.to_csv("12057_test.csv")
+print("sec/site:", end=" ")
+print((total_time / site_number))
 
-content = "12057_seg complete"
+print("mean_sinr", end=" ")
+print(selected["sinr_new"].mean())
+
+selected.to_csv("12057_seg7.csv")
+
+content = "12057_seg7 complete"
 mail = smtplib.SMTP("smtp.gmail.com", 587)
 mail.ehlo()
 mail.starttls()

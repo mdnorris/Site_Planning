@@ -13,4 +13,4 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           
-          .github/workflows/codacy-coverage-reporter.yml:  
+

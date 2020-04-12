@@ -25,10 +25,10 @@ print("12057_seg_5")
 
 # print(sites['segment'].value_counts())
 # sites = sites[sites.segment == 1]
-sites = sites[sites.segment == 2]
+# sites = sites[sites.segment == 2]
 # sites = sites[sites.segment == 3]
 # sites = sites[sites.segment == 4]
-# sites = sites[sites.segment == 5]
+sites = sites[sites.segment == 5]
 # sites = sites[sites.segment == 6]
 # sites = sites[sites.segment == 7]
 # sites = sites[sites.segment == 8]
@@ -160,25 +160,29 @@ def asset_morph(asset_num, morph_num):
 
 
 def morph_array_pole(code):
+    ma_pole = ''
     if code == 1:
-        return pole_du
+        ma_pole = pole_du
     elif code == 2:
-        return pole_u
+        ma_pole = pole_u
     elif code == 3:
-        return pole_s
+        ma_pole = pole_s
     elif code == 4:
-        return pole_r
+        ma_pole = pole_r
+    return ma_pole
 
 
 def morph_array_roe(code):
+    ma_roe = ''
     if code == 9:
-        return roe_du
+        ma_roe = roe_du
     elif code == 10:
-        return roe_u
+        ma_roe = roe_u
     elif code == 11:
-        return roe_s
+        ma_roe = roe_s
     elif code == 12:
-        return roe_r
+        ma_roe = roe_r
+    return ma_roe
 
 
 def fin_arrays_pole(code):
@@ -234,8 +238,8 @@ def fin_arrays_roe(code):
 
 
 # these variables are used in case adjustments to xnpv functinos are made
-day_diff = 0.0
-cell_split = 2.0
+# day_diff = 0.0
+# cell_split = 2.0
 
 
 # bld_npv functions are for build year, return 12 if negative
@@ -710,15 +714,15 @@ def loop_npv30(gbs, code):
     )
 
 
-def rb_thru_put(
-    code_rate, symbols, mimo, subframe, retrans, high_layer_over, over_tp_kbps
-):
-    rb_thru = (
-        ((code_rate * symbols * 4800000 * mimo * subframe) / 1000000)
-        * ((1 - retrans) * (1 - high_layer_over))
-        - (over_tp_kbps / 1000)
-    ) / 400
-    return rb_thru
+# def rb_thru_put(
+#     code_rate, symbols, mimo, subframe, retrans, high_layer_over, over_tp_kbps
+# ):
+#     rb_thru = (
+#         ((code_rate * symbols * 4800000 * mimo * subframe) / 1000000)
+#         * ((1 - retrans) * (1 - high_layer_over))
+#         - (over_tp_kbps / 1000)
+#     ) / 400
+#     return rb_thru
 
 
 def rx_calc(path_loss_umi_db):
@@ -1212,7 +1216,7 @@ end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
 print("Year_4", end=" ")
-# print(len(selected['fict_site'].unique()), end=' ')
+print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -2241,3 +2245,6 @@ mail.starttls()
 mail.login("notifications.norris@gmail.com", "Keynes92")
 mail.sendmail("notifications.norris@gmail.com", "matthew@mdnorris.com", content)
 mail.close()
+
+# coverage run site_selection.py test.py
+# coverage xml --include="site_selection.py" -o cobertura.xml

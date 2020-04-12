@@ -58,9 +58,6 @@ hr_sites = hr_sites.drop(["GBs_hourly_monthly"], axis=1)
 
 # print(sites['asset_type'].value_counts())
 
-if "SMB" in sites.values:
-    sites_smb = sites[sites.asset_type == "SMB"]
-
 sites = sites[sites.asset_type == "Pole"]
 
 initial_poles = pd.Series(len(sites["asset_id"].unique())).values.astype(int)
@@ -200,13 +197,13 @@ def fin_arrays_pole(code):
     mvno_pole = np.empty([11, 1])
     npv_array_pole = np.zeros([len(npv_values), 1])
     if code == 1:
-        npv_array = npv_values.loc[:, "pole_du"]
+        npv_array_pole = npv_values.loc[:, "pole_du"]
     elif code == 2:
-        npv_array = npv_values.loc[:, "pole_u"]
+        npv_array_pole = npv_values.loc[:, "pole_u"]
     elif code == 3:
-        npv_array = npv_values.loc[:, "pole_s"]
+        npv_array_pole = npv_values.loc[:, "pole_s"]
     elif code == 4:
-        npv_array = npv_values.loc[:, "pole_r"]
+        npv_array_pole = npv_values.loc[:, "pole_r"]
     for m in range(11):
         cpx_pole[m] = float(npv_array_pole[m + 1])
     for m in range(11):
@@ -2214,6 +2211,9 @@ if "ROE" in first_sites.values:
     sites_roe.loc[sites_roe["sinr"] > 50, "sinr"] = 50.0
 
     selected = sans_roe.append(sites_roe, sort=True)
+
+# if "SMB" in first_sites.values:
+#     sites_smb = first_sites[sites.asset_type == "SMB"]
 
 selected = selected.drop(["build_yr", "design_build_yr"], axis=1)
 selected_bins = selected["GridName"].value_counts().reset_index()

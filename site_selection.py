@@ -223,13 +223,13 @@ def fin_arrays_roe(code):
     mvno_roe = np.empty([11, 1])
     npv_array_roe = np.zeros([len(npv_values), 1])
     if code == 9:
-        npv_array = npv_values.loc[:, "roe_du"]
+        npv_array_roe = npv_values.loc[:, "roe_du"]
     elif code == 10:
-        npv_array = npv_values.loc[:, "roe_u"]
+        npv_array_roe = npv_values.loc[:, "roe_u"]
     elif code == 11:
-        npv_array = npv_values.loc[:, "roe_s"]
+        npv_array_roe = npv_values.loc[:, "roe_s"]
     elif code == 12:
-        npv_array = npv_values.loc[:, "roe_r"]
+        npv_array_roe = npv_values.loc[:, "roe_r"]
     for m in range(11):
         cpx_roe[m] = float(npv_array_roe[m + 1])
     for m in range(11):

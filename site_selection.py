@@ -194,11 +194,11 @@ def morph_array_roe(code):
 
 
 def fin_arrays_pole(code):
-    cpx = np.empty([11, 1])
-    opx = np.empty([11, 1])
-    growth = np.empty([11, 1])
-    mvno = np.empty([11, 1])
-    npv_array = np.zeros([len(npv_values), 1])
+    cpx_pole = np.empty([11, 1])
+    opx_pole = np.empty([11, 1])
+    growth_pole = np.empty([11, 1])
+    mvno_pole = np.empty([11, 1])
+    npv_array_pole = np.zeros([len(npv_values), 1])
     if code == 1:
         npv_array = npv_values.loc[:, "pole_du"]
     elif code == 2:
@@ -208,23 +208,23 @@ def fin_arrays_pole(code):
     elif code == 4:
         npv_array = npv_values.loc[:, "pole_r"]
     for m in range(11):
-        cpx[m] = float(npv_array[m + 1])
+        cpx_pole[m] = float(npv_array_pole[m + 1])
     for m in range(11):
-        opx[m] = float(npv_array[m + 12])
+        opx_pole[m] = float(npv_array_pole[m + 12])
     for m in range(11):
-        growth[m] = float(npv_array[m + 23])
+        growth_pole[m] = float(npv_array_pole[m + 23])
     for m in range(11):
-        mvno[m] = float(npv_array[m + 34])
-    end_array = np.hstack((cpx, opx, growth, mvno))
+        mvno_pole[m] = float(npv_array_pole[m + 34])
+    end_array = np.hstack((cpx_pole, opx_pole, growth_pole, mvno_pole))
     return end_array
 
 
 def fin_arrays_roe(code):
-    cpx = np.empty([11, 1])
-    opx = np.empty([11, 1])
-    growth = np.empty([11, 1])
-    mvno = np.empty([11, 1])
-    npv_array = np.zeros([len(npv_values), 1])
+    cpx_roe = np.empty([11, 1])
+    opx_roe = np.empty([11, 1])
+    growth_roe = np.empty([11, 1])
+    mvno_roe = np.empty([11, 1])
+    npv_array_roe = np.zeros([len(npv_values), 1])
     if code == 9:
         npv_array = npv_values.loc[:, "roe_du"]
     elif code == 10:
@@ -234,14 +234,14 @@ def fin_arrays_roe(code):
     elif code == 12:
         npv_array = npv_values.loc[:, "roe_r"]
     for m in range(11):
-        cpx[m] = float(npv_array[m + 1])
+        cpx_roe[m] = float(npv_array_roe[m + 1])
     for m in range(11):
-        opx[m] = float(npv_array[m + 12])
+        opx_roe[m] = float(npv_array_roe[m + 12])
     for m in range(11):
-        growth[m] = float(npv_array[m + 23])
+        growth_roe[m] = float(npv_array_roe[m + 23])
     for m in range(11):
-        mvno[m] = float(npv_array[m + 34])
-    end_array = np.hstack((cpx, opx, growth, mvno))
+        mvno_roe[m] = float(npv_array_roe[m + 34])
+    end_array = np.hstack((cpx_roe, opx_roe, growth_roe, mvno_roe))
     return end_array
 
 
@@ -2252,21 +2252,20 @@ print("site_count:", end=" ")
 print(site_number)
 
 print("total_sec:", end=" ")
-total_time = round((end_time - init_time), 2)
-print(total_time)
+print(end_time - init_time)
 
 print("total_min:", end=" ")
-print(total_time / 60)
+print((end_time - init_time) / 60)
 
 print("sec/site:", end=" ")
-print((total_time / site_number))
+print((end_time - init_time) / site_number)
 
 print("mean_sinr", end=" ")
 print(selected["sinr_new"].mean())
 
-selected.to_csv("12057_seg6.csv")
+selected.to_csv(seg_csv)
 
-content = "12057_seg6 complete"
+content = county_seg
 mail = smtplib.SMTP("smtp.gmail.com", 587)
 mail.ehlo()
 mail.starttls()

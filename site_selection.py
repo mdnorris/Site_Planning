@@ -1,4 +1,5 @@
 # base file as of 4/11/20
+# investigate timing and coverage in yr9 and 10
 
 import smtplib
 import timeit
@@ -18,18 +19,25 @@ npv_threshold = 500
 bin_prox = 17
 sinr_deg = 10
 
+seg_num = 2
+seg_id = '_seg' + str(seg_num)
+seg_county = '12057'
+output_type = '.csv'
+county_seg = seg_county + seg_id
+seg_csv = seg_county + seg_id + output_type
+
 # sites = sites.sample(frac=.3, random_state=1)
 # hr_sites = hr_sites.sample(frac=.3, random_state=1)
 
-print("12057_seg_5")
+print(county_seg)
 
 # print(sites['segment'].value_counts())
 # sites = sites[sites.segment == 1]
 # sites = sites[sites.segment == 2]
 # sites = sites[sites.segment == 3]
 # sites = sites[sites.segment == 4]
-sites = sites[sites.segment == 5]
-# sites = sites[sites.segment == 6]
+# sites = sites[sites.segment == 5]
+sites = sites[sites.segment == seg_num]
 # sites = sites[sites.segment == 7]
 # sites = sites[sites.segment == 8]
 
@@ -253,11 +261,12 @@ def bld_npv21(gbs, code):
         1.15 ** 1
     )
     if value > 0:
-        return 1
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv22(gbs, code):
@@ -267,11 +276,12 @@ def bld_npv22(gbs, code):
         1.15 ** 2
     )
     if value > 0:
-        return 2
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv23(gbs, code):
@@ -281,11 +291,12 @@ def bld_npv23(gbs, code):
         1.15 ** 3
     )
     if value > 0:
-        return 3
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv24(gbs, code):
@@ -295,11 +306,12 @@ def bld_npv24(gbs, code):
         1.15 ** 4
     )
     if value > 0:
-        return 4
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv25(gbs, code):
@@ -309,11 +321,12 @@ def bld_npv25(gbs, code):
         1.15 ** 5
     )
     if value > 0:
-        return 5
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv26(gbs, code):
@@ -323,11 +336,12 @@ def bld_npv26(gbs, code):
         1.15 ** 6
     )
     if value > 0:
-        return 6
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv27(gbs, code):
@@ -337,11 +351,12 @@ def bld_npv27(gbs, code):
         1.15 ** 7
     )
     if value > 0:
-        return 7
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv28(gbs, code):
@@ -351,11 +366,12 @@ def bld_npv28(gbs, code):
         1.15 ** 8
     )
     if value > 0:
-        return 8
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv29(gbs, code):
@@ -365,11 +381,12 @@ def bld_npv29(gbs, code):
         1.15 ** 9
     )
     if value > 0:
-        return 9
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv30(gbs, code):
@@ -379,11 +396,12 @@ def bld_npv30(gbs, code):
         1.15 ** 10
     )
     if value > 0:
-        return 11
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 # npv functions used in initial npv calculation before loop,
@@ -399,11 +417,12 @@ def bld_npv21_roe(gbs, code):
         1.15 ** 1
     )
     if value > 0:
-        return 1
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv22_roe(gbs, code):
@@ -413,11 +432,12 @@ def bld_npv22_roe(gbs, code):
         1.15 ** 2
     )
     if value > 0:
-        return 2
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv23_roe(gbs, code):
@@ -427,11 +447,12 @@ def bld_npv23_roe(gbs, code):
         1.15 ** 3
     )
     if value > 0:
-        return 3
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv24_roe(gbs, code):
@@ -441,11 +462,12 @@ def bld_npv24_roe(gbs, code):
         1.15 ** 4
     )
     if value > 0:
-        return 4
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv25_roe(gbs, code):
@@ -455,11 +477,12 @@ def bld_npv25_roe(gbs, code):
         1.15 ** 5
     )
     if value > 0:
-        return 5
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv26_roe(gbs, code):
@@ -469,11 +492,12 @@ def bld_npv26_roe(gbs, code):
         1.15 ** 6
     )
     if value > 0:
-        return 6
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv27_roe(gbs, code):
@@ -483,11 +507,12 @@ def bld_npv27_roe(gbs, code):
         1.15 ** 7
     )
     if value > 0:
-        return 7
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv28_roe(gbs, code):
@@ -497,11 +522,12 @@ def bld_npv28_roe(gbs, code):
         1.15 ** 8
     )
     if value > 0:
-        return 8
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv29_roe(gbs, code):
@@ -511,11 +537,12 @@ def bld_npv29_roe(gbs, code):
         1.15 ** 9
     )
     if value > 0:
-        return 9
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def bld_npv30_roe(gbs, code):
@@ -525,11 +552,12 @@ def bld_npv30_roe(gbs, code):
         1.15 ** 10
     )
     if value > 0:
-        return 11
+        year = 1
     elif value < 0:
-        return 12
+        year = 12
     else:
-        return 11
+        year = 11
+    return year
 
 
 def loop_npv21(gbs, code):
@@ -2236,9 +2264,9 @@ print((total_time / site_number))
 print("mean_sinr", end=" ")
 print(selected["sinr_new"].mean())
 
-selected.to_csv("12057_seg5.csv")
+selected.to_csv("12057_seg6.csv")
 
-content = "12057_seg5 complete"
+content = "12057_seg6 complete"
 mail = smtplib.SMTP("smtp.gmail.com", 587)
 mail.ehlo()
 mail.starttls()

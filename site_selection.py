@@ -18,19 +18,19 @@ npv_threshold = 500
 bin_prox = 17
 sinr_deg = 10
 
-# sites = sites.sample(frac=.5, random_state=1)
-# hr_sites = hr_sites.sample(frac=.5, random_state=1)
+# sites = sites.sample(frac=.3, random_state=1)
+# hr_sites = hr_sites.sample(frac=.3, random_state=1)
 
-print("12057_seg_7")
+print("12057_seg_5")
 
 # print(sites['segment'].value_counts())
 # sites = sites[sites.segment == 1]
-# sites = sites[sites.segment == 2]
+sites = sites[sites.segment == 2]
 # sites = sites[sites.segment == 3]
 # sites = sites[sites.segment == 4]
 # sites = sites[sites.segment == 5]
 # sites = sites[sites.segment == 6]
-sites = sites[sites.segment == 7]
+# sites = sites[sites.segment == 7]
 # sites = sites[sites.segment == 8]
 
 # 12057 - 6 > 1 > 4 > 3 > 8 > 5 > 7 > 2
@@ -1212,7 +1212,7 @@ end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
 print("Year_4", end=" ")
-print(len(selected['fict_site'].unique()), end=' ')
+# print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -2232,9 +2232,9 @@ print((total_time / site_number))
 print("mean_sinr", end=" ")
 print(selected["sinr_new"].mean())
 
-selected.to_csv("12057_seg7.csv")
+selected.to_csv("12057_seg5.csv")
 
-content = "12057_seg7 complete"
+content = "12057_seg5 complete"
 mail = smtplib.SMTP("smtp.gmail.com", 587)
 mail.ehlo()
 mail.starttls()

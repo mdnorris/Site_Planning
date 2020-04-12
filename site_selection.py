@@ -1074,7 +1074,6 @@ end_yr2 = timeit.default_timer()
 print(end_yr2 - start_yr2)
 
 print("Year_3", end=" ")
-# print(len(selected['fict_site'].unique()), end=' ')
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1308,7 +1307,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-# !!! investiage need for this
 selected = selected.reset_index(drop=True)
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
@@ -1426,6 +1424,7 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+selected = selected.reset_index(drop=True)
 end_yr5 = timeit.default_timer()
 print(end_yr5 - start_yr5)
 print("Year_6", end=" ")
@@ -1542,6 +1541,7 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+selected = selected.reset_index(drop=True)
 end_yr6 = timeit.default_timer()
 print(end_yr6 - start_yr6)
 print("Year_7", end=" ")
@@ -1588,6 +1588,7 @@ if len(sites_yr7) > 0:
     else:
         candidates = pd.DataFrame([])
 
+selected = selected.reset_index(drop=True)
 for j in range(len(candidates)):
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
@@ -1658,6 +1659,7 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+selected = selected.reset_index(drop=True)
 end_yr7 = timeit.default_timer()
 print(end_yr7 - start_yr7)
 print("Year_8", end=" ")
@@ -1704,6 +1706,7 @@ if len(sites_yr8) > 0:
     else:
         candidates = pd.DataFrame([])
 
+selected = selected.reset_index(drop=True)
 for j in range(len(candidates)):
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
@@ -1890,6 +1893,7 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+selected = selected.reset_index(drop=True)
 end_yr9 = timeit.default_timer()
 print(end_yr9 - start_yr9)
 print("Year_10", end=" ")
@@ -2005,6 +2009,7 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+selected = selected.reset_index(drop=True)
 end_yr10 = timeit.default_timer()
 print(end_yr10 - start_yr10)
 
@@ -2075,7 +2080,6 @@ if "ROE" in first_sites.values:
     roe_u = fin_arrays_roe(10)
     roe_s = fin_arrays_roe(11)
     roe_r = fin_arrays_roe(12)
-    
     # this drops any bins from original selected list
     sans_roe = selected
     sans_roe = sans_roe.drop(["npv"], axis=1)

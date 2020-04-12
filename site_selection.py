@@ -1068,8 +1068,6 @@ for j in range(len(candidates)):
     elif len(candidates) == 0:
         break
 
-selected = selected.reset_index(drop=True)
-
 end_yr2 = timeit.default_timer()
 print(end_yr2 - start_yr2)
 
@@ -1189,8 +1187,6 @@ for j in range(len(candidates)):
     elif len(candidates) == 0:
         break
 
-selected = selected.reset_index(drop=True)
-
 end_yr3 = timeit.default_timer()
 print(end_yr3 - start_yr3)
 
@@ -1307,7 +1303,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
 print("Year_5", end=" ")
@@ -1424,7 +1419,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr5 = timeit.default_timer()
 print(end_yr5 - start_yr5)
 print("Year_6", end=" ")
@@ -1541,7 +1535,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr6 = timeit.default_timer()
 print(end_yr6 - start_yr6)
 print("Year_7", end=" ")
@@ -1588,7 +1581,6 @@ if len(sites_yr7) > 0:
     else:
         candidates = pd.DataFrame([])
 
-selected = selected.reset_index(drop=True)
 for j in range(len(candidates)):
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
@@ -1659,7 +1651,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr7 = timeit.default_timer()
 print(end_yr7 - start_yr7)
 print("Year_8", end=" ")
@@ -1706,7 +1697,6 @@ if len(sites_yr8) > 0:
     else:
         candidates = pd.DataFrame([])
 
-selected = selected.reset_index(drop=True)
 for j in range(len(candidates)):
     temp_nb = pd.DataFrame([])
     for i in range(len(candidates)):
@@ -1893,7 +1883,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr9 = timeit.default_timer()
 print(end_yr9 - start_yr9)
 print("Year_10", end=" ")
@@ -2009,7 +1998,6 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
-selected = selected.reset_index(drop=True)
 end_yr10 = timeit.default_timer()
 print(end_yr10 - start_yr10)
 

@@ -1,70 +1,50 @@
-# base file as of 4/11/20
-# investigate timing and coverage in yr9 and 10
+# note that including negative npv includes threshold and bld functions
 
 import smtplib
 import timeit
-
 import numpy as np
 import pandas as pd
 
 init_time = timeit.default_timer()
-# SECTION 1: DATA INPUTS
 
+# SECTION 1: DATA INPUTS
 sites = pd.read_csv("sites_12057_rv1.csv", delimiter=",")
 hr_sites = pd.read_csv("usage_12057.csv", delimiter=",")
 npv_values = pd.read_csv("npv_high_vz_prop.csv", delimiter=",")
-lte_params = pd.read_csv("lte_assumptions.csv", delimiter=",")
+# sites = sites.sample(frac=.3, random_state=1)
+# hr_sites = hr_sites.sample(frac=.3, random_state=1)
 
+# candidate dropping criteria
 npv_threshold = 500
 bin_prox = 17
 sinr_deg = 10
 
+# segment assignment
 seg_num = 2
-seg_id = '_seg' + str(seg_num)
 seg_county = '12057'
+seg_id = '_seg' + str(seg_num)
 output_type = '.csv'
+test = 'test'
 county_seg = seg_county + seg_id
-seg_csv = seg_county + seg_id + output_type
-
-# sites = sites.sample(frac=.3, random_state=1)
-# hr_sites = hr_sites.sample(frac=.3, random_state=1)
-
+seg_csv = seg_county + seg_id + test + output_type
 print(county_seg)
-
-# print(sites['segment'].value_counts())
-# sites = sites[sites.segment == 1]
-# sites = sites[sites.segment == 2]
-# sites = sites[sites.segment == 3]
-# sites = sites[sites.segment == 4]
-# sites = sites[sites.segment == 5]
-sites = sites[sites.segment == seg_num]
-# sites = sites[sites.segment == 7]
-# sites = sites[sites.segment == 8]
-
+print(sites['segment'].value_counts())
 # 12057 - 6 > 1 > 4 > 3 > 8 > 5 > 7 > 2
+sites = sites[sites.segment == seg_num]
 
 # print((sites.isna().sum()) / len(sites) * 100)
-sites = sites.dropna()
-
 # print((hr_sites.isna().sum() / len(sites)) * 100)
-hr_sites = hr_sites.dropna()
-
+sites = sites.dropna()
 sites = sites.drop(["segment", "sum_GBs_hourly_monthly", "fips"], axis=1)
 first_sites = sites
 
-# comment out with WTG test case
+hr_sites = hr_sites.dropna()
 hr_sites["hourly_usage_gb"] = hr_sites["GBs_hourly_monthly"] / 30.42
 hr_sites = hr_sites.drop(["GBs_hourly_monthly"], axis=1)
 
+# selects pole as asset type for main run, other assets are used later
 # print(sites['asset_type'].value_counts())
-
 sites = sites[sites.asset_type == "Pole"]
-
-initial_poles = pd.Series(len(sites["asset_id"].unique())).values.astype(int)
-initial_poles = initial_poles[0]
-
-# sites = sites.drop(['segment', 'sum_GBs_hourly_monthly', 'fips'], axis=1)
-
 sites = sites.rename(
     columns={
         "bin_10": "GridName",
@@ -77,12 +57,10 @@ sites = sites.rename(
 hr_sites = hr_sites.rename(
     columns={"bin_10": "GridName", "hourly_usage_gb": "Hour_GBs"}
 )
-
 day_usage = hr_sites.groupby("GridName")["Hour_GBs"].sum().reset_index()
 sites = pd.merge(sites, day_usage, on="GridName")
 
 # NPV DATA
-
 npv_values.columns = [
     "non",
     "pole_du",
@@ -102,13 +80,10 @@ npv_values.columns = [
     "smb_s",
     "smb_r",
 ]
-
 disc_rt = 0.15
 
 # LTE INPUTS
-
 rx_sensitivity_db = -89.4
-
 
 # SECTION 2: FUNCTIONS
 
@@ -240,12 +215,6 @@ def fin_arrays_roe(code):
         mvno_roe[m] = float(npv_array_roe[m + 34])
     end_array = np.hstack((cpx_roe, opx_roe, growth_roe, mvno_roe))
     return end_array
-
-
-# these variables are used in case adjustments to xnpv functinos are made
-# day_diff = 0.0
-# cell_split = 2.0
-
 
 # bld_npv functions are for build year, return 12 if negative
 # so != 12 can be used to subset rows
@@ -739,17 +708,6 @@ def loop_npv30(gbs, code):
     )
 
 
-# def rb_thru_put(
-#     code_rate, symbols, mimo, subframe, retrans, high_layer_over, over_tp_kbps
-# ):
-#     rb_thru = (
-#         ((code_rate * symbols * 4800000 * mimo * subframe) / 1000000)
-#         * ((1 - retrans) * (1 - high_layer_over))
-#         - (over_tp_kbps / 1000)
-#     ) / 400
-#     return rb_thru
-
-
 def rx_calc(path_loss_umi_db):
     rx_signal_strength_db = 37.0 - path_loss_umi_db
     sinr = (rx_signal_strength_db - rx_sensitivity_db).round(0).astype(int)
@@ -825,6 +783,7 @@ bld_yr_sites["10"] = bld_yr_sites.apply(
 
 inh_bld_yr = bld_yr_sites[["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]]
 
+# chooses min and excludes any negative npv values
 bld_yr_sites["build_yr"] = inh_bld_yr.idxmin(axis=1).astype(int)
 bld_yr_sites = bld_yr_sites[bld_yr_sites["10"] != 12]
 print(bld_yr_sites['build_yr'].value_counts())
@@ -881,9 +840,9 @@ calc_sites = init_sites[
     ]
 ]
 
+# note that declaring variables and following if statement avoid errors
 sites_yr1 = sites_yr1[["fict_site"]]
 sites_1 = pd.merge(calc_sites, sites_yr1, on="fict_site")
-
 start_yr1 = timeit.default_timer()
 candidates = pd.DataFrame([])
 init_ranking = pd.DataFrame([])
@@ -928,7 +887,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -995,9 +953,7 @@ for j in range(len(candidates)):
 
 end_yr1 = timeit.default_timer()
 print(end_yr1 - start_yr1)
-
 print("Year_2", end=" ")
-# print(len(selected['fict_site'].unique()))
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
@@ -1046,7 +1002,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1290,7 +1245,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1308,7 +1262,6 @@ for j in range(len(candidates)):
         sinr_bins = sinr_bins_unique.append(sinr_bins_dups, sort=True)
         temp_sinr_bins = sinr_bins
         sinr_bins = sinr_bins[sinr_bins.sinr_new >= -7.0]
-
         sinr_bins_agg = sinr_bins.groupby("fict_site", as_index=False).agg(
             {"morph_code": "mean", "Hour_GBs": "sum"}
         )
@@ -1355,11 +1308,10 @@ for j in range(len(candidates)):
         candidates = pd.DataFrame(candidates).reset_index(drop=True)
         candidates = candidates.rename(columns={0: "fict_site"})
 
+# !!! investiage need for this
 selected = selected.reset_index(drop=True)
-
 end_yr4 = timeit.default_timer()
 print(end_yr4 - start_yr4)
-
 print("Year_5", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1410,7 +1362,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1477,7 +1428,6 @@ for j in range(len(candidates)):
 
 end_yr5 = timeit.default_timer()
 print(end_yr5 - start_yr5)
-
 print("Year_6", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1528,7 +1478,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1595,7 +1544,6 @@ for j in range(len(candidates)):
 
 end_yr6 = timeit.default_timer()
 print(end_yr6 - start_yr6)
-
 print("Year_7", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1646,7 +1594,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1713,7 +1660,6 @@ for j in range(len(candidates)):
 
 end_yr7 = timeit.default_timer()
 print(end_yr7 - start_yr7)
-
 print("Year_8", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1764,7 +1710,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1831,7 +1776,6 @@ for j in range(len(candidates)):
 
 end_yr8 = timeit.default_timer()
 print(end_yr8 - start_yr8)
-
 print("Year_9", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1882,7 +1826,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -1949,14 +1892,13 @@ for j in range(len(candidates)):
 
 end_yr9 = timeit.default_timer()
 print(end_yr9 - start_yr9)
+print("Year_10", end=" ")
+print(len(selected["fict_site"].unique()), end=" ")
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
-print("Year_10", end=" ")
-print(len(selected["fict_site"].unique()), end=" ")
 
 start_yr10 = timeit.default_timer()
 sites_yr10 = sites_yr10[["fict_site"]]
@@ -2000,7 +1942,6 @@ for j in range(len(candidates)):
         next_best = (pd.DataFrame(candidates.iloc[i, :])).T
         sinr_sites = selected.append(next_best, sort=True)
         sinr_bins = pd.merge(init_ranking, sinr_sites, on="fict_site")
-
         sinr_bins_unique = sinr_bins[sinr_bins["bin_count"] == 1].copy()
         sinr_bins_dups = sinr_bins[sinr_bins["bin_count"] > 1].copy()
         temp_sinr_bins_dups = (
@@ -2018,7 +1959,6 @@ for j in range(len(candidates)):
         sinr_bins = sinr_bins_unique.append(sinr_bins_dups, sort=True)
         temp_sinr_bins = sinr_bins
         sinr_bins = sinr_bins[sinr_bins.sinr_new >= -7.0]
-
         sinr_bins_agg = sinr_bins.groupby("fict_site", as_index=False).agg(
             {"morph_code": "mean", "Hour_GBs": "sum"}
         )
@@ -2055,7 +1995,6 @@ for j in range(len(candidates)):
         selected = selected.append(temp_selected, sort=True)
         new_ranking = new_ranking[["fict_site"]]
         candidates = pd.DataFrame(new_ranking.iloc[1:, :]).reset_index(drop=True)
-
     elif full == 0:
         if len(candidates) == 0:
             break
@@ -2076,9 +2015,6 @@ pole_r = fin_arrays_pole(4)
 
 selected = pd.merge(selected, init_build_yr_sites, on="fict_site")
 selected = pd.merge(selected, init_sites, on="fict_site")
-
-bld_yr_sites["build_yr"] = inh_bld_yr.idxmin(axis=1).astype(int)
-init_build_yr_sites = bld_yr_sites[["fict_site", "build_yr"]]
 
 site_bin_gbs = selected.groupby("fict_site")["Hour_GBs"].sum().reset_index()
 bld_yr_sites = pd.merge(site_bin_gbs, site_t_m, on="fict_site")
@@ -2139,7 +2075,8 @@ if "ROE" in first_sites.values:
     roe_u = fin_arrays_roe(10)
     roe_s = fin_arrays_roe(11)
     roe_r = fin_arrays_roe(12)
-
+    
+    # this drops any bins from original selected list
     sans_roe = selected
     sans_roe = sans_roe.drop(["npv"], axis=1)
 
@@ -2156,7 +2093,6 @@ if "ROE" in first_sites.values:
     # noinspection PyProtectedMember
     sites_roe = roe_merge[roe_merge._merge == "left_only"]
     sites_roe = sites_roe.drop(["_merge"], axis=1)
-
     sum_sites_roe = pd.merge(sites_roe, day_usage, on="GridName")
     site_t_m = sites_roe.groupby("fict_site")["morph_code"].mean().reset_index()
     site_bin_gbs = sum_sites_roe.groupby("fict_site")["Hour_GBs"].sum().reset_index()
@@ -2234,14 +2170,11 @@ selected_dups["sinr_new"] = sinr_new(
     selected_dups["rx_signal_strength_mw"], selected_dups["rx_signal_strength_db"]
 )
 selected = selected_unique.append(selected_dups, sort=True)
-
 # print("NaNs", end=" ")
 # print((selected.isna().sum() / len(selected)) * 100)
-
 selected = selected[selected.sinr_new >= -7.0]
 
 end_time = timeit.default_timer()
-
 temp_selected = selected.groupby("fict_site")["morph_code"].first().reset_index()
 print(temp_selected["morph_code"].value_counts())
 

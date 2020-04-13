@@ -39,6 +39,7 @@ sites = pd.merge(sites, day_usage, on="GridName")
 sites = sites.drop(["segment", "Sum_GBs", "fips"], axis=1)
 init_sites = sites
 
+print("define functions")
 # NPV DATA
 
 npv_values.columns = [
@@ -118,8 +119,6 @@ def morph(in_type, in_morph):
         morph_code = 15
     elif in_type == "SMB" and in_morph == "Rural":
         morph_code = 16
-    else:
-        print("error")
     return morph_code
 
 
@@ -161,8 +160,6 @@ def fin_arrays(code):
         npv = npv_values.loc[:, "smb_s"]
     elif code == 16:
         npv = npv_values.loc[:, "smb_r"]
-    else:
-        print("error")
     for i in range(11):
         cpx[i] = float(npv[i + 1])
     for i in range(11):
@@ -208,8 +205,6 @@ def morph_array(code):
         return smb_s
     elif code == 16:
         return smb_r
-    else:
-        print("error")
 
 
 day_diff = 0.0
@@ -942,22 +937,26 @@ smb_u = fin_arrays(14)
 smb_s = fin_arrays(15)
 smb_r = fin_arrays(16)
 
+print("segment merge and bin ownership")
 # read in segments for final calculations
 
-seg1 = pd.read_csv("12057_seg1.csv", delimiter=",")
+# seg1 = pd.read_csv("12057_seg1.csv", delimiter=",")
 seg2 = pd.read_csv("12057_seg2.csv", delimiter=",")
-seg3 = pd.read_csv("12057_seg3.csv", delimiter=",")
-seg4 = pd.read_csv("12057_seg4.csv", delimiter=",")
+# seg3 = pd.read_csv("12057_seg3.csv", delimiter=",")
+# seg4 = pd.read_csv("12057_seg4.csv", delimiter=",")
 seg5 = pd.read_csv("12057_seg5.csv", delimiter=",")
-seg6 = pd.read_csv("12057_seg6.csv", delimiter=",")
+# seg6 = pd.read_csv("12057_seg6.csv", delimiter=",")
 seg7 = pd.read_csv("12057_seg7.csv", delimiter=",")
-seg8 = pd.read_csv("12057_seg8.csv", delimiter=",")
+# seg8 = pd.read_csv("12057_seg8.csv", delimiter=",")
 
+# all_segs_init = pd.concat(
+#     [seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8], sort=True, ignore_index=True
+# )
 all_segs_init = pd.concat(
-    [seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8], sort=True, ignore_index=True
+    [seg2, seg5, seg7], sort=True, ignore_index=True
 )
 all_segs_init = all_segs_init.drop(
-    ["Unnamed: 0", "npv", "build_yr", "design_build_yr"], axis=1
+    ["Unnamed: 0"], axis=1
 )
 all_segs = all_segs_init
 (
@@ -989,17 +988,17 @@ sinr_bins_b["sinr_new"] = sinr_bins_b["sum_rx_signal"].where(
 all_segs = sinr_bins_a.append(sinr_bins_b)
 all_segs = all_segs[all_segs.sinr_new >= -2.0]
 all_segs["gb_offload"] = all_segs.groupby("fict_site")["Hour_GBs"].transform(sum)
-all_segs = all_segs.drop(
-    [
-        "path_loss_umi_db",
-        "rx_signal_strength_db",
-        "rx_signal_strength_mw",
-        "sinr",
-        "sum_rx_signal",
-        "gb_offload",
-    ],
-    axis=1,
-)
+# all_segs = all_segs.drop(
+#     [
+#         "path_loss_umi_db",
+#         "rx_signal_strength_db",
+#         "rx_signal_strength_mw",
+#         "sinr",
+#         "sum_rx_signal",
+#         "gb_offload",
+#     ],
+#     axis=1,
+# )
 all_segs["grid_temp"] = all_segs["GridName"].str.replace(r"\D", "")
 all_segs["grid_temp"] = all_segs["grid_temp"].str[-8:]
 all_segs = all_segs.sort_values(["grid_temp", "sinr_new", "opt_build_year"])
@@ -1027,22 +1026,21 @@ fict_site_count = test["fict_site"].value_counts().reset_index()
 fict_site_count = fict_site_count.rename(
     columns={"index": "fict_site", "fict_site": "fict_site_count"}
 )
-all_segs = pd.merge(all_segs, fict_site_count, on="fict_site")
 
 fict_site_count = fict_site_count.loc[fict_site_count["fict_site_count"] > 61]
-
+all_segs = pd.merge(all_segs, fict_site_count, on="fict_site")
 all_segs = all_segs.sort_values(by=["fict_site"], ascending=True)
 
 # RESET BINS FOR SITES THAT HAVE BEEN DROPPED
 
 # all_segs = pd.merge(fict_site_count, all_segs_init, on="fict_site")
 
-(
-    all_segs["rx_signal_strength_db"],
-    all_segs["sinr"],
-    all_segs["rx_signal_strength_mw"],
-) = rx_calc(all_segs["path_loss_umi_db"])
-all_segs.loc[all_segs["sinr"] > 50, "sinr"] = 50.0
+# (
+#     all_segs["rx_signal_strength_db"],
+#     all_segs["sinr"],
+#     all_segs["rx_signal_strength_mw"],
+# ) = rx_calc(all_segs["path_loss_umi_db"])
+# all_segs.loc[all_segs["sinr"] > 50, "sinr"] = 50.0
 
 sinr_bins_unique = all_segs.drop_duplicates(subset="GridName", keep=False).copy()
 sinr_bins_dups = all_segs[all_segs.duplicated(["GridName"], keep=False)].copy()
@@ -1073,6 +1071,17 @@ all_segs = all_segs.drop(
         "sinr",
         "sum_rx_signal",
         "gb_offload",
+        "SINR",
+        "Modulation",
+        "CQI",
+        "Code Rate",
+        "RBs",
+        "symbols/SF",
+        "retrans",
+        "high  layer overhead",
+        "overhead TP kbps",
+        "subframe allocation",
+        "2x2 MIMO Gain"
     ],
     axis=1,
 )
@@ -1132,6 +1141,7 @@ all_segs["enb_util"] = np.ceil(all_segs["bh_req_rbs"]) / 400
 all_segs["max_cap"] = all_segs["gb_offload"] / all_segs["enb_util"]
 all_segs = pd.merge(all_segs, fict_site_count, on="fict_site")
 
+print("npv calcs")
 npv2021 = all_segs[all_segs["opt_build_year"] == 1].copy().reset_index()
 npv2022 = all_segs[all_segs["opt_build_year"] == 2].copy().reset_index()
 npv2023 = all_segs[all_segs["opt_build_year"] == 3].copy().reset_index()
@@ -1496,7 +1506,7 @@ final_25.to_csv("final_25.csv")
 final_30.to_csv("final_30.csv")
 final_35.to_csv("final_35.csv")
 
-final = pd.merge(final_35, init_sites, on="fict_site")
+final = pd.merge(final, init_sites, on="fict_site")
 
 final["rx_signal_strength_db"], final["sinr"], final["rx_signal_strength_mw"] = rx_calc(
     final["path_loss_umi_db"]

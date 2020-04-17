@@ -6,37 +6,10 @@ hr_sites = pd.read_csv('usage_12057.csv', delimiter=',')
 npv_values = pd.read_csv('npv_high_vz_prop.csv', delimiter=',')
 lte_params = pd.read_csv('lte_assumptions.csv', delimiter=',')
 
-# initial site information
-# sites['type_morph'] = sites['asset_type'] + sites['morphology']
-#
-# print('initial sites', end='  ')
-# print(len(sites['asset_id'].unique()))
-# initial_sites = pd.Series(len(sites['asset_id'].unique()))
-#
-# print('initial bins', end='  ')
-# print(len(hr_sites['bin_10'].unique()))
-# init_bins = pd.Series(len(sites['bin_10'].unique()))
-#
-# print('initial gbs', end='  ')
-# print(hr_sites['hourly_usage_gb'].sum())
-# init_gbs = pd.Series(hr_sites['hourly_usage_gb'].sum())
-#
-# print('morphology counts', end='  ')
-# print(sites['morphology'].value_counts())
-# init_morphology = pd.DataFrame(sites['morphology'].value_counts())
-#
-# print('asset_type_counts', end='  ')
-# print(sites['asset_type'].value_counts())
-# init_asset_type = pd.DataFrame(sites['asset_type'].value_counts())
-#
-# print('type/morph counts', end='  ')
-# print(sites['type_morph'].value_counts())
-# init_type_morph = pd.DataFrame(sites['asset_type'].value_counts())
-
-print((sites.isna().sum()) / len(sites) * 100)
+# print((sites.isna().sum()) / len(sites) * 100)
 sites = sites.dropna()
 
-print((hr_sites.isna().sum() / len(sites)) * 100)
+# print((hr_sites.isna().sum() / len(sites)) * 100)
 hr_sites = hr_sites.dropna()
 
 hr_sites['hourly_usage_gb'] = hr_sites['GBs_hourly_monthly'] / 30.42
@@ -1092,234 +1065,20 @@ smb_u = fin_arrays(14)
 smb_s = fin_arrays(15)
 smb_r = fin_arrays(16)
 
-# runs to establish npv and sinr for bins at different stages
-# calculation of initial site npv without sinr
-# sites['rx_signal_strength_db'], sites['sinr'], sites['rx_signal_strength_mw'] = \
-#     rx_calc(sites['path_loss_umi_db'])
-# sites.loc[sites['sinr'] > 50, 'sinr'] = 50.0
-#
-# sites_bins = sites[['GridName', 'sinr']]
-# init_bins_sinr = sites_bins.groupby('GridName')['sinr'].max().reset_index()
-# init_bins_sinr['sinr'] = round(init_bins_sinr['sinr'])
-# print('init_bins avg_sinr', end='  ')
-# print(round(init_bins_sinr['sinr'].mean()))
-# init_bins_sinr.to_csv('init_bins_sinr_max.csv')
-#
-# sites['morph_code'] = sites.apply(lambda x: morph(x['Type'], x['Morphology']), axis=1)
-# sites = pd.merge(sites, lte_params, left_on='sinr', right_on='SINR')
-# sites['rb_thru_put'] = rb_thru_put(sites['Code Rate'], sites['symbols/SF'], sites['2x2 MIMO Gain'],
-#                                       sites['subframe allocation'], sites['retrans'],
-#                                       sites['high  layer overhead'],
-#                                       sites['overhead TP kbps'])
-# sites = pd.merge(sites, bin_req, on='GridName')
-# sites['bh_req_rbs'] = sites['bin_req_hr_mbps'] / sites['rb_thru_put']
-# sites = sites[['fict_site', 'morph_code', 'Hour_GBs', 'bh_req_rbs', 'GridName']]
-# sites = sites.groupby('fict_site', as_index=False).agg(
-#     {'bh_req_rbs': sum, 'morph_code': 'mean', 'Hour_GBs': sum})
-# sites['enb_util'] = np.ceil(sites['bh_req_rbs']) / 400
-# sites['max_cap'] = (sites['Hour_GBs'] / sites['enb_util'])
-#
-# sites['npv'] = sites.apply(lambda x: npv21(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                axis=1).astype(int)
-# sites['split_yr'] = sites.apply(lambda x: split21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-# sites['debit'] = sites.apply(lambda x: capex_21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                    sites.apply(lambda x: opex_21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-# sites['npv'] = sites['npv'] - sites['debit']
-# sites = sites.sort_values(by='npv', ascending=False)
-# sites = sites.loc[sites['npv'] > 0]
-#
-# # test1 = pd.DataFrame([])
-# # test1 = sites.apply(lambda x: reverse_morph(x['morph_code']), axis=1)
-#
-# sites.to_csv('init_npv.csv')
-#
-# sites['type'] = sites.apply(lambda x: reverse_morph_type(x['morph_code']), axis=1)
-# sites['morph'] = sites.apply(lambda x: reverse_morph_morph(x['morph_code']), axis=1)
-# sites['type_morph'] = sites.apply(lambda x: reverse_morph_type_morph(x['morph_code']), axis=1)
-# print(sites['morph'].value_counts())
-# print(sites['type_morph'].value_counts())
-
-# sites = pd.merge(sites, init_sites, on='fict_site')
-# sinr_bins_unique = sites.drop_duplicates(subset='GridName', keep=False).copy()
-# sinr_bins_dups = sites[sites.duplicated(['GridName'], keep=False)].copy()
-# sinr_bins_dups['sum_rx_signal'] = sinr_bins_dups.groupby('GridName')['rx_signal_strength_mw'].transform(sum)
-# sites = sinr_bins_unique.append(sinr_bins_dups)
-# sinr_bins_a = sites[sites['sum_rx_signal'].notnull()].copy().reset_index(drop=True)
-#
-# sinr_bins_a['sinr_new'] = sinr_new2(sinr_bins_a['sum_rx_signal'], sinr_bins_a['rx_signal_strength_db'])
-#
-# sinr_bins_b = sites[sites['sum_rx_signal'].isnull()].copy()
-# sinr_bins_b['sinr_new'] = sinr_bins_b['sum_rx_signal'].where(sinr_bins_b['sum_rx_signal'].notnull(),
-#                                                              sinr_bins_b['sinr'], axis=0)
-# sites = sinr_bins_a.append(sinr_bins_b)
-#
-# sites_bins = sites[['GridName', 'sinr']]
-# init_bins_sinr = sites_bins.groupby('GridName')['sinr'].max().reset_index()
-# init_bins_sinr['sinr'] = round(init_bins_sinr['sinr'])
-# print('init_bins avg_sinr', end='  ')
-# print(round(init_bins_sinr['sinr'].mean()))
-# init_bins_sinr.to_csv('init_bins_sinr_max.csv')
-
-
-# calculation of first build year with sinr
-# bld_sites = pd.read_csv('wtg_min_bld_yr.csv')
-# bld_sites = bld_sites.drop(['Unnamed: 0'], axis=1)
-# bld_sites['rx_signal_strength_db'], bld_sites['sinr'], bld_sites['rx_signal_strength_mw'] = \
-#     rx_calc(bld_sites['path_loss_umi_db'])
-# # temp_init_sites = init_sites[['fict_site', 'rx_signal_strength_mw']]
-# sinr_bins_unique = bld_sites.drop_duplicates(subset='GridName', keep=False).copy()
-# sinr_bins_dups = bld_sites[bld_sites.duplicated(['GridName'], keep=False)].copy()
-# sinr_bins_dups['sum_rx_signal'] = sinr_bins_dups.groupby('GridName')['rx_signal_strength_mw'].transform(sum)
-# bld_sites = sinr_bins_unique.append(sinr_bins_dups)
-# sinr_bins_a = bld_sites[bld_sites['sum_rx_signal'].notnull()].copy().reset_index(drop=True)
-#
-# sinr_bins_a['sinr_new'] = sinr_new2(sinr_bins_a['sum_rx_signal'], sinr_bins_a['rx_signal_strength_db'])
-#
-# sinr_bins_b = bld_sites[bld_sites['sum_rx_signal'].isnull()].copy()
-# sinr_bins_b['sinr_new'] = sinr_bins_b['sum_rx_signal'].where(sinr_bins_b['sum_rx_signal'].notnull(),
-#                                                              sinr_bins_b['sinr'], axis=0)
-# bld_sites = sinr_bins_a.append(sinr_bins_b)
-# bld_sites = bld_sites.loc[bld_sites['sinr_new'] >= -7]
-#
-# bld_sites['rx_signal_strength_db'], bld_sites['sinr'], bld_sites['rx_signal_strength_mw'] = \
-#     rx_calc(bld_sites['path_loss_umi_db'])
-# bld_sites = bld_sites[bld_sites.sinr >= -7.0]
-#
-# bld_sites = pd.merge(bld_sites, lte_params, left_on='sinr', right_on='SINR')
-# bld_sites['rb_thru_put'] = rb_thru_put(bld_sites['Code Rate'], bld_sites['symbols/SF'], bld_sites['2x2 MIMO Gain'],
-#                                       bld_sites['subframe allocation'], bld_sites['retrans'],
-#                                       bld_sites['high  layer overhead'],
-#                                       bld_sites['overhead TP kbps'])
-# bld_sites = pd.merge(bld_sites, bin_req, on='GridName')
-# bld_sites['bh_req_rbs'] = bld_sites['bin_req_hr_mbps'] / bld_sites['rb_thru_put']
-# bld_sites = bld_sites[['fict_site', 'morph_code', 'Hour_GBs', 'bh_req_rbs', 'build_yr']]
-# bld_sites = bld_sites.groupby('fict_site', as_index=False).agg(
-#     {'bh_req_rbs': sum, 'morph_code': 'mean', 'Hour_GBs': sum, 'build_yr': 'mean'})
-# bld_sites['enb_util'] = np.ceil(bld_sites['bh_req_rbs']) / 400
-# bld_sites['max_cap'] = (bld_sites['Hour_GBs'] / bld_sites['enb_util'])
-#
-# npv2021 = bld_sites[bld_sites['build_yr'] == 1].copy().reset_index()
-# npv2022 = bld_sites[bld_sites['build_yr'] == 2].copy().reset_index()
-# npv2023 = bld_sites[bld_sites['build_yr'] == 3].copy().reset_index()
-# npv2024 = bld_sites[bld_sites['build_yr'] == 4].copy().reset_index()
-# npv2025 = bld_sites[bld_sites['build_yr'] == 5].copy().reset_index()
-# npv2026 = bld_sites[bld_sites['build_yr'] == 6].copy().reset_index()
-# npv2027 = bld_sites[bld_sites['build_yr'] == 7].copy().reset_index()
-# npv2028 = bld_sites[bld_sites['build_yr'] == 8].copy().reset_index()
-# npv2029 = bld_sites[bld_sites['build_yr'] == 9].copy().reset_index()
-# npv2030 = bld_sites[bld_sites['build_yr'] == 10].copy().reset_index()
-#
-# if len(npv2021) > 0:
-#     npv2021['npv'] = npv2021.apply(lambda x: npv21(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2021['split_yr'] = npv2021.apply(lambda x: split21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2021['debit'] = npv2021.apply(lambda x: capex_21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2021.apply(lambda x: opex_21(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2021['npv'] = npv2021['npv'] - npv2021['debit']
-# if len(npv2022) > 0:
-#     npv2022['npv'] = npv2022.apply(lambda x: npv22(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2022['split_yr'] = npv2022.apply(lambda x: split22(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2022['debit'] = npv2022.apply(lambda x: capex_22(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2022.apply(lambda x: opex_22(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2022['npv'] = npv2022['npv'] - npv2022['debit']
-# if len(npv2023) > 0:
-#     npv2023['npv'] = npv2023.apply(lambda x: npv23(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2023['split_yr'] = npv2023.apply(lambda x: split23(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2023['debit'] = npv2023.apply(lambda x: capex_23(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2023.apply(lambda x: opex_23(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2023['npv'] = npv2023['npv'] - npv2023['debit']
-# if len(npv2024) > 0:
-#     npv2024['npv'] = npv2024.apply(lambda x: npv24(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2024['split_yr'] = npv2024.apply(lambda x: split24(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2024['debit'] = npv2024.apply(lambda x: capex_24(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2024.apply(lambda x: opex_24(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2024['npv'] = npv2024['npv'] - npv2024['debit']
-# if len(npv2025) > 0:
-#     npv2025['npv'] = npv2025.apply(lambda x: npv25(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2025['split_yr'] = npv2025.apply(lambda x: split25(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2025['debit'] = npv2025.apply(lambda x: capex_25(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2025.apply(lambda x: opex_25(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2025['npv'] = npv2025['npv'] - npv2025['debit']
-# if len(npv2026) > 0:
-#     npv2026['npv'] = npv2026.apply(lambda x: npv26(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2026['split_yr'] = npv2026.apply(lambda x: split26(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2026['debit'] = npv2026.apply(lambda x: capex_26(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2026.apply(lambda x: opex_26(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2026['npv'] = npv2026['npv'] - npv2026['debit']
-# if len(npv2027) > 0:
-#     npv2027['npv'] = npv2027.apply(lambda x: npv27(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2027['split_yr'] = npv2027.apply(lambda x: split27(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2027['debit'] = npv2027.apply(lambda x: capex_27(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2027.apply(lambda x: opex_27(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2027['npv'] = npv2027['npv'] - npv2027['debit']
-# if len(npv2028) > 0:
-#     npv2028['npv'] = npv2028.apply(lambda x: npv28(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2028['split_yr'] = npv2028.apply(lambda x: split28(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2028['debit'] = npv2028.apply(lambda x: capex_28(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2028.apply(lambda x: opex_28(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2028['npv'] = npv2028['npv'] - npv2028['debit']
-# if len(npv2029) > 0:
-#     npv2029['npv'] = npv2029.apply(lambda x: npv29(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2029['split_yr'] = npv2029.apply(lambda x: split29(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2029['debit'] = npv2029.apply(lambda x: capex_29(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2029.apply(lambda x: opex_29(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2029['npv'] = npv2029['npv'] - npv2029['debit']
-# if len(npv2030) > 0:
-#     npv2030['npv'] = npv2030.apply(lambda x: npv30(x['Hour_GBs'], x['morph_code'], x['max_cap']),
-#                                    axis=1).astype(int)
-#     npv2030['split_yr'] = npv2030.apply(lambda x: split30(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2030['debit'] = npv2030.apply(lambda x: capex_30(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1) + \
-#                        npv2030.apply(lambda x: opex_30(x['Hour_GBs'], x['max_cap'], x['morph_code']), axis=1)
-#     npv2030['npv'] = npv2030['npv'] - npv2030['debit']
-#
-# final = pd.concat([npv2024, npv2025, npv2026, npv2027, npv2028, npv2029, npv2030, npv2021, npv2022,
-#                    npv2023], sort=True, ignore_index=True)
-#
-# final = final[['fict_site', 'npv', 'build_yr', 'Hour_GBs', 'morph_code', 'debit']]
-# final = final.sort_values(by=['fict_site'], ascending=True)
-# final = final.loc[final['npv'] > 0]
-#
-# final.to_csv('build_year_npv.csv')
-#
-# final['type'] = final.apply(lambda x: reverse_morph_type(x['morph_code']), axis=1)
-# final['morph'] = final.apply(lambda x: reverse_morph_morph(x['morph_code']), axis=1)
-# final['type_morph'] = final.apply(lambda x: reverse_morph_type_morph(x['morph_code']), axis=1)
-# print(final['morph'].value_counts())
-# print(final['type_morph'].value_counts())
-#
-# final = pd.merge(final, init_sites, on='fict_site')
-# sinr_bins_unique = final.drop_duplicates(subset='GridName', keep=False).copy()
-# sinr_bins_dups = final[final.duplicated(['GridName'], keep=False)].copy()
-# sinr_bins_dups['sum_rx_signal'] = sinr_bins_dups.groupby('GridName')['rx_signal_strength_mw'].transform(sum)
-# final = sinr_bins_unique.append(sinr_bins_dups)
-# sinr_bins_a = final[final['sum_rx_signal'].notnull()].copy().reset_index(drop=True)
-#
-# sinr_bins_a['sinr_new'] = sinr_new2(sinr_bins_a['sum_rx_signal'], sinr_bins_a['rx_signal_strength_db'])
-#
-# sinr_bins_b = final[final['sum_rx_signal'].isnull()].copy()
-# sinr_bins_b['sinr_new'] = sinr_bins_b['sum_rx_signal'].where(sinr_bins_b['sum_rx_signal'].notnull(),
-#                                                              sinr_bins_b['sinr'], axis=0)
-# final = sinr_bins_a.append(sinr_bins_b)
-#
-# sites_bins = final[['GridName', 'sinr_new']]
-# build_yr_bins_sinr = sites_bins.groupby('GridName')['sinr_new'].mean().reset_index()
-# build_yr_bins_sinr['sinr'] = round(build_yr_bins_sinr['sinr_new'])
-# print('build_yr_bins_sinr avg_sinr', end='  ')
-# print(round(build_yr_bins_sinr['sinr_new'].mean()))
-# build_yr_bins_sinr.to_csv('build_year_bins_sinr.csv')
-
 # merged segment final npv calculation
 
-# seg1 = pd.read_csv('wtg_271_30_seg1.csv', delimiter=',')
-# seg4 = pd.read_csv('wtg_271_30_seg4.csv', delimiter=',')
+
+# pi_seg1 = pd.read_csv('pi_seg1.csv', delimiter=',')
+# pi_seg2 = pd.read_csv('pi_seg2.csv', delimiter=',')
+# pi_seg3 = pd.read_csv('pi_seg3.csv', delimiter=',')
+# pi_seg4 = pd.read_csv('pi_seg4.csv', delimiter=',')
+# pi_seg5 = pd.read_csv('pi_seg5.csv', delimiter=',')
+# pi_seg6 = pd.read_csv('pi_seg6.csv', delimiter=',')
+# pi_seg7 = pd.read_csv('pi_seg7.csv', delimiter=',')
+# pi_seg8 = pd.read_csv('pi_seg8.csv', delimiter=',')
+#
+# all_segs_init = pd.concat([pi_seg1, pi_seg2, pi_seg3, pi_seg4, pi_seg5, pi_seg6, pi_seg7, pi_seg8], sort=True, ignore_index=True)
+
 
 seg1 = pd.read_csv('12057_seg1.csv', delimiter=',')
 seg2 = pd.read_csv('12057_seg2.csv', delimiter=',')
@@ -1331,10 +1090,9 @@ seg7 = pd.read_csv('12057_seg7.csv', delimiter=',')
 seg8 = pd.read_csv('12057_seg8.csv', delimiter=',')
 
 all_segs_init = pd.concat([seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8], sort=True, ignore_index=True)
+print(len(all_segs_init['fict_site'].unique()))
 
-# all_segs_init = seg1.append(seg4, sort=True)
-# all_segs_init = pd.read_csv('wtg_17_15.csv', delimiter=',')
-all_segs_init = all_segs_init.drop(['Unnamed: 0', 'npv', 'build_yr', 'design_build_yr'], axis=1)
+all_segs_init = all_segs_init.drop(['Unnamed: 0'], axis=1)
 all_segs = all_segs_init
 
 all_segs['rx_signal_strength_db'], all_segs['sinr'], all_segs['rx_signal_strength_mw'] = \
@@ -1363,9 +1121,10 @@ all_segs = all_segs.sort_values(['grid_temp', 'sinr_new', 'opt_build_year'])
 
 all_segs_unique = all_segs.drop_duplicates(subset='grid_temp', keep=False).copy()
 all_segs_dups = all_segs[all_segs.duplicated(['grid_temp'], keep=False)].copy()
-if len(all_segs_dups) > 0:
-    all_segs_dups = all_segs_dups.groupby('grid_temp').last().reset_index()
-    all_segs = all_segs_unique.append(all_segs_dups)
+all_segs = all_segs_unique.append(all_segs_dups)
+# if len(all_segs_dups) > 0:
+#     all_segs_dups = all_segs_dups.groupby('grid_temp').last().reset_index()
+#     all_segs = all_segs_unique.append(all_segs_dups)
 
 all_segs = pd.merge(all_segs, lte_params, left_on='sinr_new', right_on='SINR')
 all_segs['rb_thru_put'] = rb_thru_put(all_segs['Code Rate'], all_segs['symbols/SF'], all_segs['2x2 MIMO Gain'],
@@ -1378,15 +1137,17 @@ test = all_segs[['GridName', 'fict_site']]
 fict_site_count = test['fict_site'].value_counts().reset_index()
 fict_site_count = fict_site_count.rename(columns={'index': 'fict_site', 'fict_site': 'fict_site_count'})
 all_segs = pd.merge(all_segs, fict_site_count, on='fict_site')
-
+print("before bin threshold")
+print(len(all_segs))
 fict_site_count = fict_site_count.loc[fict_site_count['fict_site_count'] > 61]
 
-all_segs = all_segs.sort_values(by=['fict_site'], ascending=True)
+# all_segs = all_segs.sort_values(by=['fict_site'], ascending=True)
 
 # RESET BINS FOR SITES THAT HAVE BEEN DROPPED
 
 all_segs = pd.merge(fict_site_count, all_segs_init, on='fict_site')
-
+print("after bin threshold")
+print(len(all_segs))
 all_segs['rx_signal_strength_db'], all_segs['sinr'], all_segs['rx_signal_strength_mw'] = \
     rx_calc(all_segs['path_loss_umi_db'])
 all_segs.loc[all_segs['sinr'] > 50, 'sinr'] = 50.0
@@ -1414,9 +1175,10 @@ all_segs = all_segs.sort_values(['grid_temp', 'sinr_new', 'opt_build_year'])
 
 all_segs_unique = all_segs.drop_duplicates(subset='grid_temp', keep=False).copy()
 all_segs_dups = all_segs[all_segs.duplicated(['grid_temp'], keep=False)].copy()
-if len(all_segs_dups) > 0:
-    all_segs_dups = all_segs_dups.groupby('grid_temp').last().reset_index()
-    all_segs = all_segs_unique.append(all_segs_dups)
+all_segs = all_segs_unique.append(all_segs_dups)
+# if len(all_segs_dups) > 0:
+#     all_segs_dups = all_segs_dups.groupby('grid_temp').last().reset_index()
+#     all_segs = all_segs_unique.append(all_segs_dups)
 
 all_segs = pd.merge(all_segs, lte_params, left_on='sinr_new', right_on='SINR')
 all_segs['rb_thru_put'] = rb_thru_put(all_segs['Code Rate'], all_segs['symbols/SF'], all_segs['2x2 MIMO Gain'],
@@ -1436,16 +1198,17 @@ all_segs = pd.merge(all_segs, fict_site_count_2, on='fict_site')
 all_segs = all_segs.sort_values(by=['fict_site'], ascending=True)
 
 all_segs = pd.merge(all_segs, bin_req, on='GridName')
-print(len(all_segs))
-print(len(all_segs['fict_site'].unique()))
 
+print('site count', end='')
+print(len(all_segs['fict_site'].unique()))
+sinr_test = all_segs
 all_segs['bh_req_rbs'] = all_segs['bin_req_hr_mbps'] / all_segs['rb_thru_put']
 all_segs = all_segs[['fict_site', 'morph_code', 'gb_offload', 'bh_req_rbs', 'opt_build_year']]
 all_segs = all_segs.groupby('fict_site', as_index=False).agg(
     {'bh_req_rbs': sum, 'morph_code': 'mean', 'gb_offload': 'mean', 'opt_build_year': 'mean'})
 all_segs['enb_util'] = np.ceil(all_segs['bh_req_rbs']) / 400
 all_segs['max_cap'] = (all_segs['gb_offload'] / all_segs['enb_util'])
-all_segs = pd.merge(all_segs, fict_site_count, on='fict_site')
+all_segs = pd.merge(all_segs, fict_site_count_2, on='fict_site')
 
 npv2021 = all_segs[all_segs['opt_build_year'] == 1].copy().reset_index()
 npv2022 = all_segs[all_segs['opt_build_year'] == 2].copy().reset_index()
@@ -1588,9 +1351,9 @@ if len(npv2030) > 0:
 
 final = pd.concat([npv2024, npv2025, npv2026, npv2027, npv2028, npv2029, npv2030, npv2021, npv2022,
                    npv2023], sort=True, ignore_index=True)
-final = final.rename(columns={0: 'year_1_excess', 1: 'year_2_excess', 2: 'year_3_excess', 3: 'year_4_excess',
-                              4: 'year_5_excess', 5: 'year_6_excess', 6: 'year_7_excess', 7: 'year_8_excess',
-                              8: 'year_9_excess', 9: 'year_10_excess'})
+# final = final.rename(columns={0: 'year_1_excess', 1: 'year_2_excess', 2: 'year_3_excess', 3: 'year_4_excess',
+#                               4: 'year_5_excess', 5: 'year_6_excess', 6: 'year_7_excess', 7: 'year_8_excess',
+#                               8: 'year_9_excess', 9: 'year_10_excess'})
 
 # final = final[['fict_site', 'npv', 'fict_site_count', 'opt_build_year', 'gb_offload', 'max_cap', 'morph_code', 'debit',
 #                'year_1_excess', 'year_2_excess', 'year_3_excess', 'year_4_excess', 'year_5_excess', 'year_6_excess',
@@ -1666,31 +1429,33 @@ final_25.to_csv('final_25.csv')
 final_30.to_csv('final_30.csv')
 final_35.to_csv('final_35.csv')
 
-# final['type'] = final_35.apply(lambda x: reverse_morph_type(x['morph_code']), axis=1)
-# final['morph'] = final_35.apply(lambda x: reverse_morph_morph(x['morph_code']), axis=1)
-# final['type_morph'] = final_35.apply(lambda x: reverse_morph_type_morph(x['morph_code']), axis=1)
-# print(final['morph'].value_counts())
-# print(final['type_morph'].value_counts())
-#
-# final = pd.merge(final_35, init_sites, on='fict_site')
-#
-# final['rx_signal_strength_db'], final['sinr'], final['rx_signal_strength_mw'] = \
-#     rx_calc(final['path_loss_umi_db'])
-# sinr_bins_unique = final.drop_duplicates(subset='GridName', keep=False).copy()
-# sinr_bins_dups = final[final.duplicated(['GridName'], keep=False)].copy()
-# sinr_bins_dups['sum_rx_signal'] = sinr_bins_dups.groupby('GridName')['rx_signal_strength_mw'].transform(sum)
-# final = sinr_bins_unique.append(sinr_bins_dups)
-# sinr_bins_a = final[final['sum_rx_signal'].notnull()].copy().reset_index(drop=True)
-#
-# sinr_bins_a['sinr_new'] = sinr_new2(sinr_bins_a['sum_rx_signal'], sinr_bins_a['rx_signal_strength_db'])
-#
-# sinr_bins_b = final[final['sum_rx_signal'].isnull()].copy()
-# sinr_bins_b['sinr_new'] = sinr_bins_b['sum_rx_signal'].where(sinr_bins_b['sum_rx_signal'].notnull(),
-#                                                              sinr_bins_b['sinr'], axis=0)
-# final = sinr_bins_a.append(sinr_bins_b)
-# final_bins = final[['GridName', 'sinr_new']]
-# final_bins_sinr = final_bins.groupby('GridName')['sinr_new'].mean().reset_index()
-# final_bins_sinr['sinr'] = round(final_bins_sinr['sinr_new'])
-# print('final_bins_sinr avg_sinr', end='  ')
-# print(round(final_bins_sinr['sinr'].mean()))
-# final_bins_sinr.to_csv('17_15_bins.csv')
+final['type'] = final.apply(lambda x: reverse_morph_type(x['morph_code']), axis=1)
+final['morph'] = final.apply(lambda x: reverse_morph_morph(x['morph_code']), axis=1)
+final['type_morph'] = final.apply(lambda x: reverse_morph_type_morph(x['morph_code']), axis=1)
+print(final['morph'].value_counts())
+print(final['type_morph'].value_counts())
+
+sinr_test = sinr_test[['GridName']]
+init_sites = pd.merge(sinr_test, init_sites, on='GridName')
+final = pd.merge(final, init_sites, on='fict_site')
+
+final['rx_signal_strength_db'], final['sinr'], final['rx_signal_strength_mw'] = \
+    rx_calc(final['path_loss_umi_db'])
+sinr_bins_unique = final.drop_duplicates(subset='GridName', keep=False).copy()
+sinr_bins_dups = final[final.duplicated(['GridName'], keep=False)].copy()
+sinr_bins_dups['sum_rx_signal'] = sinr_bins_dups.groupby('GridName')['rx_signal_strength_mw'].transform(sum)
+final = sinr_bins_unique.append(sinr_bins_dups)
+sinr_bins_a = final[final['sum_rx_signal'].notnull()].copy().reset_index(drop=True)
+
+sinr_bins_a['sinr_new'] = sinr_new2(sinr_bins_a['sum_rx_signal'], sinr_bins_a['rx_signal_strength_db'])
+
+sinr_bins_b = final[final['sum_rx_signal'].isnull()].copy()
+sinr_bins_b['sinr_new'] = sinr_bins_b['sum_rx_signal'].where(sinr_bins_b['sum_rx_signal'].notnull(),
+                                                             sinr_bins_b['sinr'], axis=0)
+final = sinr_bins_a.append(sinr_bins_b)
+final_bins = final[['GridName', 'sinr_new']]
+final_bins_sinr = final_bins.groupby('GridName')['sinr_new'].mean().reset_index()
+final_bins_sinr['sinr'] = round(final_bins_sinr['sinr_new'])
+print('final_bins_sinr avg_sinr', end='  ')
+print(round(final_bins_sinr['sinr'].mean()))
+final_bins_sinr.to_csv('bins.csv')

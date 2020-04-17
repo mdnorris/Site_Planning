@@ -1,7 +1,8 @@
-# note that including negative npv includes threshold and bld functions
+# note that including negative npv involves threshold and bld functions
 
 import smtplib
 import timeit
+import datetime
 import numpy as np
 import pandas as pd
 
@@ -15,16 +16,16 @@ npv_values = pd.read_csv("npv_high_vz_prop.csv", delimiter=",")
 # hr_sites = hr_sites.sample(frac=.3, random_state=1)
 
 # candidate dropping criteria
-npv_threshold = 500
+npv_threshold = 0
 bin_prox = 17
 sinr_deg = 10
 
 # segment assignment
-seg_num = 2
+seg_num = 6
 seg_county = '12057'
 seg_id = '_seg' + str(seg_num)
 output_type = '.csv'
-test = 'test'
+test = ''
 county_seg = seg_county + seg_id
 seg_csv = seg_county + seg_id + test + output_type
 print(county_seg)
@@ -952,14 +953,15 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr1 = timeit.default_timer()
-print(end_yr1 - start_yr1)
+print(end_yr1 - start_yr1, end=' ')
+print(datetime.datetime.now().time())
 print("Year_2", end=" ")
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
+print(pole_du)
 start_yr2 = timeit.default_timer()
 sites_yr2 = sites_yr2[["fict_site"]]
 sites_2 = pd.merge(calc_sites, sites_yr2, on="fict_site")
@@ -1069,15 +1071,15 @@ for j in range(len(candidates)):
         break
 
 end_yr2 = timeit.default_timer()
-print(end_yr2 - start_yr2)
-
+print(end_yr2 - start_yr2, end=' ')
+print(datetime.datetime.now().time())
 print("Year_3", end=" ")
 
 pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
+print(pole_du)
 start_yr3 = timeit.default_timer()
 sites_yr3 = sites_yr3[["fict_site"]]
 sites_3 = pd.merge(calc_sites, sites_yr3, on="fict_site")
@@ -1188,8 +1190,8 @@ for j in range(len(candidates)):
         break
 
 end_yr3 = timeit.default_timer()
-print(end_yr3 - start_yr3)
-
+print(end_yr3 - start_yr3, end=' ')
+print(datetime.datetime.now().time())
 print("Year_4", end=" ")
 print(len(selected['fict_site'].unique()), end=' ')
 
@@ -1197,7 +1199,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
+print(pole_du)
 start_yr4 = timeit.default_timer()
 sites_yr4 = sites_yr4[["fict_site"]]
 sites_4 = pd.merge(calc_sites, sites_yr4, on="fict_site")
@@ -1304,7 +1306,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr4 = timeit.default_timer()
-print(end_yr4 - start_yr4)
+print(end_yr4 - start_yr4, end=' ')
+print(datetime.datetime.now().time())
 print("Year_5", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1312,7 +1315,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
+print(pole_du)
 start_yr5 = timeit.default_timer()
 sites_yr5 = sites_yr5[["fict_site"]]
 sites_5 = pd.merge(calc_sites, sites_yr5, on="fict_site")
@@ -1420,7 +1423,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr5 = timeit.default_timer()
-print(end_yr5 - start_yr5)
+print(end_yr5 - start_yr5, end=' ')
+print(datetime.datetime.now().time())
 print("Year_6", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1428,7 +1432,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-
+print(pole_du)
 start_yr6 = timeit.default_timer()
 sites_yr6 = sites_yr6[["fict_site"]]
 sites_6 = pd.merge(calc_sites, sites_yr6, on="fict_site")
@@ -1536,7 +1540,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr6 = timeit.default_timer()
-print(end_yr6 - start_yr6)
+print(end_yr6 - start_yr6, end=' ')
+print(datetime.datetime.now().time())
 print("Year_7", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1652,7 +1657,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr7 = timeit.default_timer()
-print(end_yr7 - start_yr7)
+print(end_yr7 - start_yr7, end=' ')
+print(datetime.datetime.now().time())
 print("Year_8", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1768,7 +1774,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr8 = timeit.default_timer()
-print(end_yr8 - start_yr8)
+print(end_yr8 - start_yr8, end=' ')
+print(datetime.datetime.now().time())
 print("Year_9", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1884,7 +1891,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr9 = timeit.default_timer()
-print(end_yr9 - start_yr9)
+print(end_yr9 - start_yr9, end=' ')
+print(datetime.datetime.now().time())
 print("Year_10", end=" ")
 print(len(selected["fict_site"].unique()), end=" ")
 
@@ -1999,7 +2007,8 @@ for j in range(len(candidates)):
         candidates = candidates.rename(columns={0: "fict_site"})
 
 end_yr10 = timeit.default_timer()
-print(end_yr10 - start_yr10)
+print(end_yr10 - start_yr10, end=' ')
+print(datetime.datetime.now().time())
 
 pole_du = fin_arrays_pole(1)
 pole_u = fin_arrays_pole(2)

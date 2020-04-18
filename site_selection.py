@@ -21,7 +21,7 @@ bin_prox = 17
 sinr_deg = 10
 
 # segment assignment
-seg_num = 6
+seg_num = 4
 seg_county = '12057'
 seg_id = '_seg' + str(seg_num)
 output_type = '.csv'
@@ -29,7 +29,7 @@ test = ''
 county_seg = seg_county + seg_id
 seg_csv = seg_county + seg_id + test + output_type
 print(county_seg)
-print(sites['segment'].value_counts())
+# print(sites['segment'].value_counts())
 # 12057 - 6 > 1 > 4 > 3 > 8 > 5 > 7 > 2
 sites = sites[sites.segment == seg_num]
 
@@ -961,7 +961,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-print(pole_du)
+
 start_yr2 = timeit.default_timer()
 sites_yr2 = sites_yr2[["fict_site"]]
 sites_2 = pd.merge(calc_sites, sites_yr2, on="fict_site")
@@ -1079,7 +1079,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-print(pole_du)
+
 start_yr3 = timeit.default_timer()
 sites_yr3 = sites_yr3[["fict_site"]]
 sites_3 = pd.merge(calc_sites, sites_yr3, on="fict_site")
@@ -1199,7 +1199,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-print(pole_du)
+
 start_yr4 = timeit.default_timer()
 sites_yr4 = sites_yr4[["fict_site"]]
 sites_4 = pd.merge(calc_sites, sites_yr4, on="fict_site")
@@ -1315,7 +1315,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-print(pole_du)
+
 start_yr5 = timeit.default_timer()
 sites_yr5 = sites_yr5[["fict_site"]]
 sites_5 = pd.merge(calc_sites, sites_yr5, on="fict_site")
@@ -1432,7 +1432,7 @@ pole_du = pole_du[1:11, :]
 pole_u = pole_u[1:11, :]
 pole_s = pole_s[1:11, :]
 pole_r = pole_r[1:11, :]
-print(pole_du)
+
 start_yr6 = timeit.default_timer()
 sites_yr6 = sites_yr6[["fict_site"]]
 sites_6 = pd.merge(calc_sites, sites_yr6, on="fict_site")
